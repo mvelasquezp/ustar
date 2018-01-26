@@ -1,0 +1,2 @@
+var locales="es-PE",local2digits = {minimumFractionDigits:2,maximumFractionDigits:2};
+$("#caret-menu").on("click", function(event) {event.preventDefault();$(".profile-menu").toggleClass("profile-menu-active");});

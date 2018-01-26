@@ -1,0 +1,20 @@
+html, body { height:100%; }
+.wrapper { height:100%;margin-left:0;margin-right:0;padding-left:0;padding-right:0; }
+.row-offcanvas { position:relative;margin-left:0;margin-right:0;height:100%; }
+#sidebar { background-color:#eee;min-height:100%;padding:15px;overflow:hidden;-webkit-transition:width 0.3s ease-in;-moz-transition:width 0.3s ease-in;transition:width 0.3s ease-in;z-index:1; }
+#sidebar span.collapse.in { display:inline; }
+#sidebar .nav .nav-item .nav-link { white-space:nowrap;overflow:hidden; }
+#main { padding:0;left:0; }
+@media screen and (max-width:34em) {
+	#sidebar { min-width:43px;-webkit-transition:all 0.4s ease-in-out;-moz-transition:all 0.4s ease-in-out;transition:all 0.4s ease-in-out;}
+    #main {width:60%;}
+    .row-offcanvas-left.active .sidebar-offcanvas span.collapse { display:inline !important;}
+    .row-offcanvas-left.active { left:40%;}
+    .row-offcanvas-left.active .sidebar-offcanvas { left:-40%;position:absolute;top:0;width:40%;}
+    .row-offcanvas-left.active #main { width:60%;}
+    .row-offcanvas-left.active .sidebar-offcanvas span.collapse.in {display:inline !important;}
+}			 
+@media screen and (min-width:34em) {
+	.row-offcanvas-left.active { left:43px;width:97%;width:calc(100% - 43px);}
+	.row-offcanvas-left.active .sidebar-offcanvas { left:-43px;position:absolute;top:0;width:43px;text-align:left;min-width:43px;} 
+}

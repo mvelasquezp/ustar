@@ -16,6 +16,7 @@ Route::get('/', function () {
 */
 Route::group(["namespace" => "Web"], function() {
 	Route::get("/", "Intranet@home");
+	Route::get("viewer/{param}", "Intranet@viewer");
 	Route::group(["prefix" => "servicios"], function() {
 		Route::group(["prefix" => "distribucion"], function() {
 			Route::get("/", "Intranet@srv_distribucion");
@@ -28,7 +29,11 @@ Route::group(["namespace" => "Web"], function() {
 	});
 	//tracking
 	Route::group(["prefix" => "tracking"], function() {
-		Route::get("/", "Tracking@tracking");
+		Route::get("/", "Intranet@tracking");
+		Route::group(["prefix" => "ajax"], function() {
+			Route::post("buscar", "Tracking@buscar");
+			Route::post("detalle", "Tracking@detalle");
+		});
 	});
 	//autenticacion de usuarios
 	Route::group(["prefix" => "login"], function() {

@@ -65,7 +65,7 @@ class Intranet extends Controller {
     //adicionales
 
     public function viewer($param) {
-        $file = implode(DIRECTORY_SEPAARTOR, [env("APP_STORAGE_PATH"), str_replace("@", DIRECTORY_SEPAARTOR, $param)]);
+        $file = implode(DIRECTORY_SEPARATOR, [env("APP_STORAGE_PATH"), str_replace("@", DIRECTORY_SEPARATOR, $param)]);
         $type = "image/jpeg";
         header("Content-Type:" . $type);
         header("Content-Length: " . filesize($file));

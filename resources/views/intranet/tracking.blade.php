@@ -207,7 +207,7 @@
 										"data-target": "#carrusel-" + idx,
 										"data-slide-to": j
 									});
-									var div = $("<div/>").addClass("carousel-item").css("height","250px").append(
+									var div = $("<div/>").addClass("carousel-item").css("height","480px").append(
 										$("<img/>").addClass("d-block w-100").attr({
 											"src": "{{ url('viewer') }}/" + img.rutaimg.replace(/\/\//g,"@") + img.nomimg,
 											"alt": img.nomimg
@@ -293,7 +293,9 @@
 										"id": "galeria-" + idx,
 										"role": "tabpanel",
 										"aria-labelledby": "galeria-tab-" + idx
-									}).append(carrusel)
+									}).append(
+										$("<div/>").addClass("col-sm-12 col-md-8 col-lg-6").append(carrusel)
+									)
 								)
 							);
 						}

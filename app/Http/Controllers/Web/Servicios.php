@@ -26,6 +26,10 @@ class Servicios extends Controller {
         $user = Auth::user();
         extract(Request::input());
         if(isset($dsd, $hst, $ofc, $ccs, $prd, $loc, $nac, $int)) {
+            $vDsd = explode("/", $dsd);
+            $vHst = explode("/", $hst);
+            $dsd = implode("-", [$vDsd[2], $vDsd[1], $vDsd[0]]);
+            $hst = implode("-", [$vHst[2], $vHst[1], $vHst[0]]);
             $resultados = DB::select("call sp_web_servicios_distribu_list(?,?,?,?,?,?,?,?,?)", [$dsd, $hst, $prd, $ofc, $ccs, $user->v_Codusuario, $loc, $nac, $int]);
             return Response::json([
                 "state" => "success",

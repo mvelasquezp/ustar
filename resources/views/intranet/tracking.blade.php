@@ -43,8 +43,8 @@
 					<div class="form-container alert alert-secondary" role="alert">
 						<form id="form-filtro" method="post" class="form-inline">
 							<label class="form-control-sm">Fecha</label>
-							<input type="text" class="form-control form-control-sm datepicker" id="fdesde" placeholder="Desde" style="width:6em;">
-							<input type="text" class="form-control form-control-sm datepicker" id="fhasta" placeholder="Hasta" style="width:6em;">
+							<input type="text" class="form-control form-control-sm datepicker" id="fdesde" placeholder="Desde" style="width:7em;">
+							<input type="text" class="form-control form-control-sm datepicker" id="fhasta" placeholder="Hasta" style="width:7em;">
 							<!-- -->
 							<label class="form-control-sm" for="producto">Producto</label>
 							<select class="form-control form-control-sm" id="producto" style="max-width:90px;">
@@ -65,14 +65,17 @@
 							<input type="hidden" id="oficina" value="{{ $ofcs[0]->codigo }}">
 							@endif
 							<!-- -->
-							<label class="form-control-sm" for="documento">Doc.Union</label>
-							<input type="text" class="form-control form-control-sm" id="documento" placeholder="Orden, guía" style="width:5em;">
+							<label class="form-control-sm" for="documento">
+								Doc.Union&nbsp;<input type="text" class="form-control form-control-sm" id="documento" placeholder="Orden, guía" style="width:10em;">
+							</label>
 							<!-- -->
-							<label class="form-control-sm" for="refcli">Ref.Cliente</label>
-							<input type="text" class="form-control form-control-sm" id="refcli" placeholder="GR/Factura/Boleta" style="width:5em;">
+							<label class="form-control-sm" for="refcli">
+								Ref.Cliente&nbsp;<input type="text" class="form-control form-control-sm" id="refcli" placeholder="GR/Factura/Boleta" style="width:10em;">
+							</label>
 							<!-- -->
-							<label class="form-control-sm" for="destinatario">Destinatario</label>
-							<input type="text" class="form-control form-control-sm" id="destinatario" placeholder="Nombre/RUC-DNI/Empresa" style="width:8em;">
+							<label class="form-control-sm" for="destinatario">
+								Destinatario&nbsp;<input type="text" class="form-control form-control-sm" id="destinatario" placeholder="Nombre/RUC-DNI/Empresa" style="width:20em;">
+							</label>
 							<!-- -->
 							&nbsp;<button id="btn-form" type="button" class="btn btn-success btn-sm"><i class="fa fa-search"></i> Buscar</button>
 						</form>
@@ -142,7 +145,7 @@
 			var data;
 			$(".datepicker").datepicker({
 				autoclose: true,
-				format: "yyyy-mm-dd",
+				format: "dd/mm/yyyy",
 				language:"es",
 				todayHighlight: true
 			});
@@ -375,31 +378,70 @@
 					);
 				}
 				$("#pager").children(".active").removeClass("active");
-				if(page == 1) $("#pager-prev").addClass("disabled");
-				else $("#pager-prev").removeClass("disabled");
-				$("#pager").children("li").eq(page).addClass("active");
-				if(page == data.pages) $("#pager-next").addClass("disabled");
-				else $("#pager-next").removeClass("disabled");
+				if(page == 1) {
+					$("#pager-first").addClass("disabled");
+					$("#pager-prev").addClass("disabled");
+				}
+				else {
+					$("#pager-first").removeClass("disabled");
+					$("#pager-prev").removeClass("disabled");
+				}
+				//
+				var IndiceActual = page + 1;
+				var LimitePaginas = 3;
+				$(".page-numerator").hide();
+				$("#pager").children("li").eq(IndiceActual).addClass("active").show();
+				for(var i = 1; i <= LimitePaginas; i++) {
+					if(IndiceActual - i > 1) $("#pager").children("li").eq(IndiceActual - i).show();
+				}
+				for(var i = 1; i <= LimitePaginas; i++) {
+					if(IndiceActual + i < data.pages + 2) $("#pager").children("li").eq(IndiceActual + i).show();
+				}
+				//
+				if(page == data.pages) {
+					$("#pager-last").addClass("disabled");
+					$("#pager-next").addClass("disabled");
+				}
+				else {
+					$("#pager-last").removeClass("disabled");
+					$("#pager-next").removeClass("disabled");
+				}
 				data.currentPage = page;
 			}
 			function BuildPager(pages) {
 				var pager = $("#pager");
 				pager.empty();
 				pager.append(
+					$("<li/>").attr("id","pager-first").addClass("page-item").append(
+						$("<a/>").addClass("page-link").attr("href","#").data("goto","first").append(
+							$("<i/>").addClass("fa fa-step-backward")
+						)
+					)
+				).append(
 					$("<li/>").attr("id","pager-prev").addClass("page-item").append(
-						$("<a/>").addClass("page-link").attr("href","#").data("goto","prev").html("Anterior")
+						$("<a/>").addClass("page-link").attr("href","#").data("goto","prev").append(
+							$("<i/>").addClass("fa fa-caret-left")
+						)
 					)
 				);
 				for(var i = 1; i <= pages; i++) {
 					pager.append(
-						$("<li/>").addClass("page-item").append(
+						$("<li/>").addClass("page-item page-numerator").append(
 							$("<a/>").addClass("page-link").attr("href","#").data("goto",i).html(i)
 						)
 					);
 				}
 				pager.append(
 					$("<li/>").attr("id","pager-next").addClass("page-item").append(
-						$("<a/>").addClass("page-link").attr("href","#").data("goto","next").html("Siguiente")
+						$("<a/>").addClass("page-link").attr("href","#").data("goto","next").append(
+							$("<i/>").addClass("fa fa-caret-right")
+						)
+					)
+				).append(
+					$("<li/>").attr("id","pager-last").addClass("page-item").append(
+						$("<a/>").addClass("page-link").attr("href","#").data("goto","last").append(
+							$("<i/>").addClass("fa fa-step-forward")
+						)
 					)
 				);
 				$(".page-link").on("click", function(event) {
@@ -407,8 +449,10 @@
 					var idx = $(this).data("goto");
 					var goTo = 0;
 					switch(idx) {
+						case "first":goTo = 1;break;
 						case "prev":goTo = data.currentPage - 1;break;
 						case "next":goTo = data.currentPage + 1;break;
+						case "last":goTo = data.pages;break;
 						default: goTo = parseInt(idx);
 					}
 					RenderTable(goTo);

@@ -52,8 +52,14 @@
 						<li class="nav-item{{ $menu == 3 ? ' active' : '' }}">
 							<a class="nav-link" href="{{ url('reclamos') }}"><i class="fa fa-gavel"></i> Reclamos</a>
 						</li>
-						<li class="nav-item{{ $menu == 4 ? ' active' : '' }}">
-							<a class="nav-link" href="{{ url('indicadores') }}"><i class="fa fa-bar-chart"></i> Indicadores</a>
+						<li class="nav-item{{ $menu == 4 ? ' active' : '' }} dropdown">
+							<a class="nav-link dropdown-toggle" href="#" id="indicadorDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-bar-chart"></i> Indicadores</a>
+							<!-- -->
+							<div class="dropdown-menu" aria-labelledby="indicadorDropdown">
+								<a class="dropdown-item" href="{{ url('indicadores/d-entregas') }}"><i class="fa fa-paper-plane"></i> Distribución - Entregas</a>
+								<a class="dropdown-item" href="{{ url('indicadores/d-reclamos') }}"><i class="fa fa-exclamation-circle"></i> Distribución - Reclamos</a>
+								<!--div class="dropdown-divider"></div-->
+					        </div>
 						</li>
 						<li class="nav-item{{ $menu == 5 ? ' active' : '' }}">
 							<a class="nav-link" href="{{ url('usuarios') }}"><i class="fa fa-users"></i> Usuarios</a>

@@ -4,35 +4,6 @@
 		<title>Servicios | Distribución</title>
 		@include("common.styles")
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/datepicker.min.css') }}">
-		<style type="text/css">
-			.form-container{margin:10px;padding:5px}
-			label.form-control-sm{padding:5px}
-			.table-responsive{max-height:400px;}
-			#dv-table{display:none;}
-			#loader-busqueda{background-color:#e8e8e8;bottom:10px;box-shadow:1px 1px 3px #808080;display:none;left:10px;position:absolute}
-			#loader-busqueda>div{display:table;height:48px;width:256px}
-			#loader-busqueda>div>*{display:table-cell;vertical-align:middle}
-			#loader-busqueda>div>img{height:32px;margin:8px}
-			#loader-busqueda>div>p{font-size:12px}
-			.tr-detalle{display:none}
-			.tr-detalle>td>.dv-loader{display:table;padding:10px;width:100%}
-			.tr-detalle>td>.dv-loader>*{display:inline-block;vertical-align:middle}
-			.tr-detalle>td>.dv-loader>img{height:64px;width:64px}
-			.tr-detalle>td>.dv-loader>p{font-size:14px;margin:0;text-align:left}
-			/* ----------------- */
-			.vmsl-container{
-				background-color: #1565c0;
-				height:320px;
-				width: 240px;
-				position: absolute;
-				box-shadow: 1px 1px 3px #d0d0d0;
-				overflow-y: auto;
-			}
-			.vmsl-container>ul{list-style:none;text-align:left;margin:2px;padding:0;}
-			.vmsl-container>ul>li{padding:2px 8px;text-align:left;}
-			.vmsl-container>ul>li>label{display:block;color:#e3f2fd;cursor:pointer;}
-			.vmsl-container>ul>li>label:hover{color:#f8f8f8;}
-		</style>
 	</head>
 	<body>
 		@include("common.navbar")

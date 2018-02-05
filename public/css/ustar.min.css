@@ -1,0 +1,14 @@
+.form-container{margin:10px;padding:5px}
+label.form-control-sm{padding:5px}
+.table-responsive{max-height:400px;}
+#dv-table{display:none;}
+#loader-busqueda{background-color:#e8e8e8;bottom:10px;box-shadow:1px 1px 3px #808080;display:none;left:10px;position:absolute}
+#loader-busqueda>div{display:table;height:48px;width:256px}
+#loader-busqueda>div>*{display:table-cell;vertical-align:middle}
+#loader-busqueda>div>img{height:32px;margin:8px}
+#loader-busqueda>div>p{font-size:12px}
+.tr-detalle{display:none}
+.tr-detalle>td>.dv-loader{display:table;padding:10px;width:100%}
+.tr-detalle>td>.dv-loader>*{display:inline-block;vertical-align:middle}
+.tr-detalle>td>.dv-loader>img{height:64px;width:64px}
+.tr-detalle>td>.dv-loader>p{font-size:14px;margin:0;text-align:left}

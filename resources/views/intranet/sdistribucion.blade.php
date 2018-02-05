@@ -4,35 +4,6 @@
 		<title>Servicios | Distribución</title>
 		@include("common.styles")
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/datepicker.min.css') }}">
-		<style type="text/css">
-			.form-container{margin:10px;padding:5px}
-			label.form-control-sm{padding:5px}
-			.table-responsive{max-height:400px;}
-			#dv-table{display:none;}
-			#loader-busqueda{background-color:#e8e8e8;bottom:10px;box-shadow:1px 1px 3px #808080;display:none;left:10px;position:absolute}
-			#loader-busqueda>div{display:table;height:48px;width:256px}
-			#loader-busqueda>div>*{display:table-cell;vertical-align:middle}
-			#loader-busqueda>div>img{height:32px;margin:8px}
-			#loader-busqueda>div>p{font-size:12px}
-			.tr-detalle{display:none}
-			.tr-detalle>td>.dv-loader{display:table;padding:10px;width:100%}
-			.tr-detalle>td>.dv-loader>*{display:inline-block;vertical-align:middle}
-			.tr-detalle>td>.dv-loader>img{height:64px;width:64px}
-			.tr-detalle>td>.dv-loader>p{font-size:14px;margin:0;text-align:left}
-			/* ----------------- */
-			.vmsl-container{
-				background-color: #1565c0;
-				height:320px;
-				width: 240px;
-				position: absolute;
-				box-shadow: 1px 1px 3px #d0d0d0;
-				overflow-y: auto;
-			}
-			.vmsl-container>ul{list-style:none;text-align:left;margin:2px;padding:0;}
-			.vmsl-container>ul>li{padding:2px 8px;text-align:left;}
-			.vmsl-container>ul>li>label{display:block;color:#e3f2fd;cursor:pointer;}
-			.vmsl-container>ul>li>label:hover{color:#f8f8f8;}
-		</style>
 	</head>
 	<body>
 		@include("common.navbar")
@@ -47,39 +18,24 @@
 							<input type="text" class="form-control form-control-sm datepicker" id="fhasta" placeholder="Hasta" style="width:6em;">
 							<!-- -->
 							@if(strcmp($usuario->tp_cliente,'admin') == 0)
-							<label class="form-control-sm" for="oficina">Oficina</label>
-							<select class="form-control form-control-sm" id="oficina" style="max-width:90px;">
-								@foreach($ofcs as $oficina)
-								<option value="{{ $oficina->codigo }}">{{ $oficina->descripcion }}</option>
-								@endforeach
-							</select>
+							<label class="form-control-sm" for="oficina">
+								Oficina&nbsp;
+								<input type="text" id="trg-oficina" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;">
+							</label>
 							<!-- -->
-							<label class="form-control-sm" for="ccosto">C. Costo</label>
-							<select  id="ccosto" class="form-control form-control-sm">
-								@foreach($ccts as $ccosto)
-								<option value="{{ $ccosto->codigo }}">{{ $ccosto->descripcion }}</option>
-								@endforeach
-							</select>
-							<!--input type="text" id="trg-ccosto" class="form-control form-control-sm" placeholder="Seleccione" style="width:8em;">
-							<div class="vmsl-container">
-								<ul>
-									<li><label><input type="checkbox" id="trg-ccosto-chb-all" value="0"> Seleccionar todo</label></li>
-									@foreach($ccts as $ccosto)
-									<li><label><input type="checkbox" name="trg-ccosto-chb" value="{{ $ccosto->codigo }}"> {{ $ccosto->descripcion }}</label></li>
-									@endforeach
-								</ul>
-							</div-->
+							<label class="form-control-sm" for="ccosto">
+								C. Costo&nbsp;
+								<input type="text" id="trg-ccosto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;">
+							</label>
 							@else
-							<input type="hidden" id="oficina" value="{{ $ofcs[0]->codigo }}">
-							<input type="hidden" id="ccosto" value="{{ $ccts[0]->codigo }}">
+							<input type="hidden" id="oficina" class="ch-of" value="{{ $ofcs[0]->codigo }}">
+							<input type="hidden" id="ccosto" class="ch-cc" value="{{ $ccts[0]->codigo }}">
 							@endif
 							<!-- -->
-							<label class="form-control-sm" for="producto">Producto</label>
-							<select class="form-control form-control-sm" id="producto" style="max-width:90px;">
-								@foreach($prds as $producto)
-								<option value="{{ $producto->codigo }}">{{ $producto->descripcion }}</option>
-								@endforeach
-							</select>
+							<label class="form-control-sm" for="producto">
+								Producto&nbsp;
+								<input type="text" id="trg-producto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;">
+							</label>
 							<!-- -->
 							<div class="form-check-inline">
 								<label class="form-check-label" for="tplocal">
@@ -150,6 +106,98 @@
 				</ul>
 			</nav>
 		</div>
+		@if(strcmp($usuario->tp_cliente,'admin') == 0)
+		<!-- modal - seleccion de oficina -->
+		<div id="modal-oficina" class="modal fade" tabindex="-1" role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title text-primary">Seleccione oficinas</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<ul class="list-group">
+							@foreach($ofcs as $idx => $oficina)
+							@if($idx == 0)
+							<label class="list-group-item d-flex justify-content-between align-items-center active">
+								{{ $oficina->descripcion }}
+								<span><input id="ch-of-all" type="checkbox" value="{{ $oficina->codigo }}" checked="checked"></span>
+							</label>
+							@else
+							<label class="list-group-item d-flex justify-content-between align-items-center">
+								{{ $oficina->descripcion }}
+								<span><input id="ch-of-{{ $idx }}" class="ch-of" type="checkbox" value="{{ $oficina->codigo }}" data-label="{{ $oficina->descripcion }}" checked="checked"></span>
+							</label>
+							@endif
+							@endforeach
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- modal - centros de costo -->
+		<div id="modal-ccosto" class="modal fade" tabindex="-1" role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title text-primary">Seleccione centros de costo</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<ul class="list-group">
+							@foreach($ccts as $idx => $ccosto)
+							@if($idx == 0)
+							<label class="list-group-item d-flex justify-content-between align-items-center active">
+								{{ $ccosto->descripcion }}
+								<span><input id="ch-cc-all" type="checkbox" value="{{ $ccosto->codigo }}" checked="checked"></span>
+							</label>
+							@else
+							<label class="list-group-item d-flex justify-content-between align-items-center">
+								{{ $ccosto->descripcion }}
+								<span><input id="ch-cc-{{ $idx }}" class="ch-cc" type="checkbox" value="{{ $ccosto->codigo }}" data-label="{{ $ccosto->descripcion }}" checked="checked"></span>
+							</label>
+							@endif
+							@endforeach
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		@endif
+		<!-- modal - centros de costo -->
+		<div id="modal-producto" class="modal fade" tabindex="-1" role="dialog">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title text-primary">Seleccione centros de costo</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<ul class="list-group">
+							@foreach($prds as $idx => $producto)
+							@if($idx == 0)
+							<label class="list-group-item d-flex justify-content-between align-items-center active">
+								{{ $producto->descripcion }}
+								<span><input id="ch-pr-all" type="checkbox" value="{{ $producto->codigo }}" checked="checked"></span>
+							</label>
+							@else
+							<label class="list-group-item d-flex justify-content-between align-items-center">
+								{{ $producto->descripcion }}
+								<span><input id="ch-pr-{{ $idx }}" class="ch-pr" type="checkbox" value="{{ $producto->codigo }}" data-label="{{ $producto->descripcion }}" checked="checked"></span>
+							</label>
+							@endif
+							@endforeach
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
 		<!-- loader de búsqueda -->
 		<div id="loader-busqueda">
 			<div>
@@ -162,6 +210,14 @@
 		<script type="text/javascript" src="{{ asset('js/datepicker.min.js') }}"></script>
 		<script type="text/javascript">
 			var data;
+			var arr_ofcs = ["Todos"];
+			var arr_ccs = ["Todos"];
+			var arr_prds = ["Todos"];
+			//iniciar controles
+			document.getElementById("trg-oficina").value = "Todos";
+			document.getElementById("trg-ccosto").value = "Todos";
+			document.getElementById("trg-producto").value = "Todos";
+			//
 			$(".datepicker").datepicker({
 				autoclose: true,
 				format: "dd/mm/yyyy",
@@ -395,9 +451,9 @@
 					_token: "{{ csrf_token() }}",
 					dsd: document.getElementById("fdesde").value,
 					hst: document.getElementById("fhasta").value,
-					ofc: document.getElementById("oficina").value,
-					ccs: document.getElementById("ccosto").value,
-					prd: document.getElementById("producto").value,
+					ofc: arr_ofcs,
+					ccs: arr_ccs,
+					prd: arr_prds,
 					loc: document.getElementById("tplocal").checked ? 'S' : 'N',
 					nac: document.getElementById("tpnacional").checked ? 'S' : 'N',
 					int: document.getElementById("tpinternacional").checked ? 'S' : 'N'
@@ -423,48 +479,87 @@
 					$("#loader-busqueda").fadeOut(150);
 				}, "json");
 			});
-			//funcion para calcular la posicion del control
-			function getOffset( el ) {
-			    var _x = 0;
-			    var _y = 0;
-			    while( el && !isNaN( el.offsetLeft ) && !isNaN( el.offsetTop ) ) {
-			        _x += el.offsetLeft - el.scrollLeft;
-			        _y += el.offsetTop - el.scrollTop;
-			        el = el.offsetParent;
-			    }
-			    return { top: _y, left: _x };
-			}
-			//insertar el multi select
-			var pst = getOffset(document.getElementById("trg-ccosto"));
-			var filas = {!! json_encode($ccts) !!};
-			console.log(pst);
-			var ul = $("<ul/>");
-			for(var i in filas) {
-				var fila = filas[i];
-				if(i == 0) {
-					ul.append(
-						$("<li/>").append(
-							$("<label/>").append(
-								$("<input/>").attr({type:"checkbox",value:fila.codigo,id:"trg-ccosto-chb-all"})
-							).append(" Seleccionar todo")
-						)
-					)
+			//modal oficina
+			$("#trg-oficina").on("click", function() {
+				$("#modal-oficina").modal("show");
+			});
+			$("#ch-of-all").change(function() {
+				$(".ch-of").prop("checked", document.getElementById("ch-of-all").checked);
+			});
+			$(".ch-of").change(function() {
+				$(".ch-of-all").prop("checked", false);
+			});
+			$("#modal-oficina").on("hide.bs.modal", function() {
+				arr_ofcs = new Array();
+				if(document.getElementById("ch-of-all").checked) {
+					arr_ofcs = [document.getElementById("ch-of-all").value];
+					document.getElementById("trg-oficina").value = "Todos";
 				}
 				else {
-					ul.append(
-						$("<li/>").append(
-							$("<label/>").append(
-								$("<input/>").attr({type:"checkbox",value:fila.codigo,name:"trg-ccosto-chb"})
-							).append(" " + fila.descripcion)
-						)
-					)
+					var of_all = $(".ch-of:checked");
+					var sseleccion = "";
+					$.each(of_all, function() {
+						var input = $(this);
+						arr_ofcs.push(input.val());
+						sseleccion += (sseleccion == "" ? "" : ",") + input.data("label");
+					});
+					document.getElementById("trg-oficina").value = sseleccion;
 				}
-			}
-			var div = $("<div/>").addClass("vmsl-container").append(ul).css({
-				"top": (pst.top - 114 + 25) + "px",
-				"left": (pst.left - 225) + "px"
 			});
-			$(div).insertAfter($("#trg-ccosto"));
+			//modal ccosto
+			$("#trg-ccosto").on("click", function() {
+				$("#modal-ccosto").modal("show");
+			});
+			$("#ch-cc-all").change(function() {
+				$(".ch-cc").prop("checked", document.getElementById("ch-cc-all").checked);
+			});
+			$(".ch-cc").change(function() {
+				$(".ch-cc-all").prop("checked", false);
+			});
+			$("#modal-ccosto").on("hide.bs.modal", function() {
+				arr_ccs = new Array();
+				if(document.getElementById("ch-cc-all").checked) {
+					arr_ccs = [document.getElementById("ch-cc-all").value];
+					document.getElementById("trg-ccosto").value = "Todos";
+				}
+				else {
+					var of_all = $(".ch-cc:checked");
+					var sseleccion = "";
+					$.each(of_all, function() {
+						var input = $(this);
+						arr_ccs.push(input.val());
+						sseleccion += (sseleccion == "" ? "" : ",") + input.data("label");
+					});
+					document.getElementById("trg-ccosto").value = sseleccion;
+				}
+			});
+			//modal producto
+			$("#trg-producto").on("click", function() {
+				$("#modal-producto").modal("show");
+			});
+			$("#ch-pr-all").change(function() {
+				$(".ch-pr").prop("checked", document.getElementById("ch-pr-all").checked);
+			});
+			$(".ch-pr").change(function() {
+				$(".ch-pr-all").prop("checked", false);
+			});
+			$("#modal-producto").on("hide.bs.modal", function() {
+				arr_prds = new Array();
+				if(document.getElementById("ch-pr-all").checked) {
+					arr_prds = [document.getElementById("ch-pr-all").value];
+					document.getElementById("trg-producto").value = "Todos";
+				}
+				else {
+					var pr_all = $(".ch-pr:checked");
+					var sseleccion = "";
+					$.each(pr_all, function() {
+						var input = $(this);
+						arr_prds.push(input.val());
+						sseleccion += (sseleccion == "" ? "" : ",") + input.data("label");
+					});
+					document.getElementById("trg-producto").value = sseleccion;
+				}
+			});
 		</script>
 	</body>
 </html>

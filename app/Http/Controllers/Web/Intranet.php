@@ -62,6 +62,16 @@ class Intranet extends Controller {
         return view("intranet.tracking")->with($arrData);
     }
 
+    public function ind_dis_entregas() {
+        $user = Auth::user();
+        $arrData = [
+            "usuario" => $user,
+            "menu" => 4,
+            "opcion" => "Indicadores > Entregas"
+        ];
+        return view("intranet.identregas")->with($arrData);
+    }
+
     //adicionales
 
     public function viewer($param) {

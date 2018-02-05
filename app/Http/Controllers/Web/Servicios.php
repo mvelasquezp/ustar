@@ -30,7 +30,10 @@ class Servicios extends Controller {
             $vHst = explode("/", $hst);
             $dsd = implode("-", [$vDsd[2], $vDsd[1], $vDsd[0]]);
             $hst = implode("-", [$vHst[2], $vHst[1], $vHst[0]]);
-            $resultados = DB::select("call sp_web_servicios_distribu_list(?,?,?,?,?,?,?,?,?)", [$dsd, $hst, $prd, $ofc, $ccs, $user->v_Codusuario, $loc, $nac, $int]);
+            $sofc = implode(",", $ofc);
+            $sccs = implode(",", $ccs);
+            $sprd = implode(",", $prd);
+            $resultados = DB::select("call sp_web_servicios_distribu_list(?,?,?,?,?,?,?,?,?)", [$dsd, $hst, $sprd, $sofc, $sccs, $user->v_Codusuario, $loc, $nac, $int]);
             return Response::json([
                 "state" => "success",
                 "data" => [

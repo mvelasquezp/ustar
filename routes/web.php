@@ -35,6 +35,10 @@ Route::group(["namespace" => "Web"], function() {
 			Route::post("detalle", "Tracking@detalle");
 		});
 	});
+	//indicadores
+	Route::prefix("indicadores")->group(function() {
+		Route::get("d-entregas", "Intranet@ind_dis_entregas");
+	});
 	//autenticacion de usuarios
 	Route::group(["prefix" => "login"], function() {
 		Route::get("/", ["as" => "login", "uses" => "Autenticacion@form_login"]);

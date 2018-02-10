@@ -181,9 +181,16 @@
 										"data-target": "#carrusel-" + idx,
 										"data-slide-to": j
 									});
+									var url;
+									if(img.nomimg.indexOf(".tif") == -1) {
+										url = "{{ url('viewer') }}/" + img.rutaimg.replace(/\/\//g,"@") + img.nomimg;
+									}
+									else {
+										url = "http://trackingnatura.unionstar.com.pe/wstar/modulos/busquedas/viewer.php?r=" + img.rutaimg.replace(/\/\//g,"@") + img.nomimg;
+									}
 									var div = $("<div/>").addClass("carousel-item").css("height","480px").append(
 										$("<img/>").addClass("d-block w-100").attr({
-											"src": "{{ url('viewer') }}/" + img.rutaimg.replace(/\/\//g,"@") + img.nomimg,
+											"src": url,
 											"alt": img.nomimg
 										})
 									);

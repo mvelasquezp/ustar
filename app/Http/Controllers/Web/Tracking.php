@@ -56,8 +56,8 @@ class Tracking extends Controller {
         if(isset($agn,$prc,$ctr)) {
             $detalle = DB::select("call sp_web_tracking_distribu_seg(?,?,?)", [$agn,$prc,$ctr]);
             $imagenes = DB::select("call sp_web_imagenes_cargos(?,?,?)", [$agn,$prc,$ctr]);
-            //$detalle = DB::select("call sp_web_tracking_distribu_seg(?,?,?)", [1020212132,19,1]);
-            //$imagenes = DB::select("call sp_web_imagenes_cargos(?,?,?)", [1020212132,19,1]);
+            //$detalle = DB::select("call sp_web_tracking_distribu_seg(?,?,?)", [102029932,1,36]);
+            //$imagenes = DB::select("call sp_web_imagenes_cargos(?,?,?)", [102029932,1,36]);
             return Response::json([
                 "state" => "success",
                 "data" => [

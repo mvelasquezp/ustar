@@ -64,12 +64,34 @@ class Intranet extends Controller {
 
     public function ind_dis_entregas() {
         $user = Auth::user();
+        $cmb_oficinas = DB::select("call sp_web_combo_areas(?)", [$user->v_Codusuario]);
+        $cmb_productos = DB::select("call sp_web_combo_tipoenvios(?)", [$user->v_Codusuario]);
         $arrData = [
             "usuario" => $user,
             "menu" => 4,
-            "opcion" => "Indicadores > Entregas"
+            "opcion" => "Indicadores > Entregas",
+            "ofcs" => $cmb_oficinas,
+            "prds" => $cmb_productos
         ];
         return view("intranet.identregas")->with($arrData);
+    }
+
+    public function usuarios() {
+        $user = Auth::user();
+        $cmb_oficinas = DB::select("call sp_web_combo_areas(?)", [$user->v_Codusuario]);
+        $usuarios = DB::select("call sp_web_usuarios_list(?,?,?)", [$user->v_Codusuario, "Todos", ""]);
+        $contactos = DB::select("call sp_web_combo_contactoscli(?)", [$user->v_Codusuario]);
+        $perfiles = DB::select("call sp_web_combo_perfiles(?)", ["3"]);
+        $arrData = [
+            "usuario" => $user,
+            "menu" => 5,
+            "ofcs" => $cmb_oficinas,
+            "usuarios" => $usuarios,
+            "contactos" => $contactos,
+            "perfiles" => $perfiles,
+            "opcion" => "Usuarios"
+        ];
+        return view("intranet.usuarios")->with($arrData);
     }
 
     //adicionales

@@ -20,7 +20,7 @@ class Indicadores extends Controller {
     public function __construct() {
         $this->middleware("auth");
         date_default_timezone_set("America/Lima");
-    }
+    }/*
 
     public function distribucion_entregas() {
         $user = Auth::user();
@@ -41,6 +41,29 @@ class Indicadores extends Controller {
                 "data" => [
                     "rows" => $resultados,
                     "doc" => $doc
+                ]
+            ]);
+        }
+        return Response::json([
+            "state" => "error",
+            "message" => "Parámetros de búsqueda incorrectos"
+        ]);
+    }*/
+
+    public function ebuscar() {
+        $user = Auth::user();
+        extract(Request::input());
+        if(isset($ccl,$ofc,$prd,$loc,$nac,$int)) {
+            $ccl = implode(",", $ccl);
+            $prd = implode(",", $prd);
+            $ofc = implode(",", $ofc);
+            $data1 = DB::select("call sp_web_grafica_distribu1_list(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
+            $data2 = DB::select("call sp_web_grafica_distribu2_list(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
+            return Response::json([
+                "state" => "success",
+                "data" => [
+                    "data1" => $data1,
+                    "data2" => $data2
                 ]
             ]);
         }

@@ -168,7 +168,7 @@
 			</div>
 		</div>
 		@endif
-		<!-- modal - centros de costo -->
+		<!-- modal - productos -->
 		<div id="modal-producto" class="modal fade" tabindex="-1" role="dialog">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
@@ -210,13 +210,6 @@
 		<script type="text/javascript" src="{{ asset('js/datepicker.min.js') }}"></script>
 		<script type="text/javascript">
 			var data;
-			var arr_ofcs = ["Todos"];
-			var arr_ccs = ["Todos"];
-			var arr_prds = ["Todos"];
-			//iniciar controles
-			document.getElementById("trg-oficina").value = "Todos";
-			document.getElementById("trg-ccosto").value = "Todos";
-			document.getElementById("trg-producto").value = "Todos";
 			//
 			$(".datepicker").datepicker({
 				autoclose: true,
@@ -479,87 +472,9 @@
 					$("#loader-busqueda").fadeOut(150);
 				}, "json");
 			});
-			//modal oficina
-			$("#trg-oficina").on("click", function() {
-				$("#modal-oficina").modal("show");
-			});
-			$("#ch-of-all").change(function() {
-				$(".ch-of").prop("checked", document.getElementById("ch-of-all").checked);
-			});
-			$(".ch-of").change(function() {
-				$(".ch-of-all").prop("checked", false);
-			});
-			$("#modal-oficina").on("hide.bs.modal", function() {
-				arr_ofcs = new Array();
-				if(document.getElementById("ch-of-all").checked) {
-					arr_ofcs = [document.getElementById("ch-of-all").value];
-					document.getElementById("trg-oficina").value = "Todos";
-				}
-				else {
-					var of_all = $(".ch-of:checked");
-					var sseleccion = "";
-					$.each(of_all, function() {
-						var input = $(this);
-						arr_ofcs.push(input.val());
-						sseleccion += (sseleccion == "" ? "" : ",") + input.data("label");
-					});
-					document.getElementById("trg-oficina").value = sseleccion;
-				}
-			});
-			//modal ccosto
-			$("#trg-ccosto").on("click", function() {
-				$("#modal-ccosto").modal("show");
-			});
-			$("#ch-cc-all").change(function() {
-				$(".ch-cc").prop("checked", document.getElementById("ch-cc-all").checked);
-			});
-			$(".ch-cc").change(function() {
-				$(".ch-cc-all").prop("checked", false);
-			});
-			$("#modal-ccosto").on("hide.bs.modal", function() {
-				arr_ccs = new Array();
-				if(document.getElementById("ch-cc-all").checked) {
-					arr_ccs = [document.getElementById("ch-cc-all").value];
-					document.getElementById("trg-ccosto").value = "Todos";
-				}
-				else {
-					var of_all = $(".ch-cc:checked");
-					var sseleccion = "";
-					$.each(of_all, function() {
-						var input = $(this);
-						arr_ccs.push(input.val());
-						sseleccion += (sseleccion == "" ? "" : ",") + input.data("label");
-					});
-					document.getElementById("trg-ccosto").value = sseleccion;
-				}
-			});
-			//modal producto
-			$("#trg-producto").on("click", function() {
-				$("#modal-producto").modal("show");
-			});
-			$("#ch-pr-all").change(function() {
-				$(".ch-pr").prop("checked", document.getElementById("ch-pr-all").checked);
-			});
-			$(".ch-pr").change(function() {
-				$(".ch-pr-all").prop("checked", false);
-			});
-			$("#modal-producto").on("hide.bs.modal", function() {
-				arr_prds = new Array();
-				if(document.getElementById("ch-pr-all").checked) {
-					arr_prds = [document.getElementById("ch-pr-all").value];
-					document.getElementById("trg-producto").value = "Todos";
-				}
-				else {
-					var pr_all = $(".ch-pr:checked");
-					var sseleccion = "";
-					$.each(pr_all, function() {
-						var input = $(this);
-						arr_prds.push(input.val());
-						sseleccion += (sseleccion == "" ? "" : ",") + input.data("label");
-					});
-					document.getElementById("trg-producto").value = sseleccion;
-				}
-			});
 		</script>
+		@include("common.js-oficinas")
+		@include("common.js-ccostos")
+		@include("common.js-productos")
 	</body>
 </html>

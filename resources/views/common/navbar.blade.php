@@ -42,7 +42,7 @@
 							<a class="nav-link dropdown-toggle" href="#" id="serviciosDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fa fa-list-ul"></i> Mis servicios</a>
 							<div class="dropdown-menu" aria-labelledby="serviciosDropdown">
 								<a class="dropdown-item" href="{{ url('servicios/distribucion') }}"><i class="fa fa-truck"></i> Distribución</a>
-								<a class="dropdown-item" href="{{ url('servicios/almacenes') }}"><i class="fa fa-archive"></i> Almacenes</a>
+								<!--a class="dropdown-item" href="{{ url('servicios/almacenes') }}"><i class="fa fa-archive"></i> Almacenes</a-->
 								<!--div class="dropdown-divider"></div-->
 					        </div>
 						</li>

@@ -38,6 +38,13 @@ Route::group(["namespace" => "Web"], function() {
 	//indicadores
 	Route::prefix("indicadores")->group(function() {
 		Route::get("d-entregas", "Intranet@ind_dis_entregas");
+		Route::prefix("ajax")->group(function() {
+			Route::post("buscar", "Indicadores@ebuscar");
+		});
+	});
+	//usuarios
+	Route::prefix("usuarios")->group(function() {
+		Route::get("/", "Intranet@usuarios");
 	});
 	//autenticacion de usuarios
 	Route::group(["prefix" => "login"], function() {

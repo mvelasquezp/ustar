@@ -279,10 +279,11 @@
 							ccl: document.getElementById("nu-codcli").value,
 							ctc: document.getElementById("nu-contacto").value,
 							psw: clave,
-							prf: document.getElementById("nu-perfil").value
+							prf: document.getElementById("nu-perfil").value,
+							als: document.getElementById("nu-alias").value
 						};
 						$.post("{{ url('usuarios/ajax/ins-usuario') }}", p, function(response) {
-							if(response.success) {
+							if(response.state == "success") {
 								usuarios = response.data;
 								$("#btn-form").trigger("click");
 								$("#modal-insert").modal("hide");

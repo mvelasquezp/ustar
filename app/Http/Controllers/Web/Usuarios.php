@@ -45,12 +45,12 @@ class Usuarios extends Controller {
     public function ins_usuario() {
         $user = Auth::user();
         extract(Request::input());
-        if(isset($nom,$dni,$eml,$tlf,$eid,$ccl,$ctc,$psw,$prf)) {
+        if(isset($als,$nom,$dni,$eml,$tlf,$eid,$ccl,$ctc,$psw,$prf)) {
             $cd1 = isset($cd1) ? $cd1 : "";
             $cd2 = isset($cd2) ? $cd2 : "";
             $cd3 = isset($cd3) ? $cd3 : "";
             DB::table("seg_user")->insert([
-                "v_Codusuario" => $user->v_Codusuario,
+                "v_Codusuario" => $als,
                 "v_Nombres" => $nom,
                 "c_TipoDocide" => "1",
                 "v_NroDocide" => $dni,

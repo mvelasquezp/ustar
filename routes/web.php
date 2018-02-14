@@ -45,6 +45,10 @@ Route::group(["namespace" => "Web"], function() {
 	//usuarios
 	Route::prefix("usuarios")->group(function() {
 		Route::get("/", "Intranet@usuarios");
+		Route::prefix("ajax")->group(function() {
+			Route::post("cmb-contacto","Usuarios@cmb_contacto");
+			Route::post("ins-usuario","Usuarios@ins_usuario");
+		});
 	});
 	//autenticacion de usuarios
 	Route::group(["prefix" => "login"], function() {

@@ -5,7 +5,6 @@
 		@include("common.styles")
 		<style type="text/css">
 			.div-chart{height:400px;width:100%}
-			.btn-xs{padding:.15rem .4rem;font-size:.75rem;line-height:1.5;border-radius:.2rem}
 		</style>
 	</head>
 	<body>

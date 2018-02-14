@@ -48,6 +48,7 @@ Route::group(["namespace" => "Web"], function() {
 		Route::prefix("ajax")->group(function() {
 			Route::post("cmb-contacto","Usuarios@cmb_contacto");
 			Route::post("ins-usuario","Usuarios@ins_usuario");
+			Route::post("dt-usuario","Usuarios@dt_usuario");
 		});
 	});
 	//autenticacion de usuarios

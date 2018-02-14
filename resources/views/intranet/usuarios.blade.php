@@ -160,26 +160,108 @@
 									</div>
 								</div>
 							</div>
-							<!--div class="row">
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+						<button type="button" class="btn btn-primary" id="btn-guardar"><i class="fa fa-floppy-o"></i> Guardar</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- modal nuevo usuario -->
+		<div class="modal fade bd-example-modal-lg" id="modal-edit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLabel"><i class="fa fa-user text-info"></i> Edición de usuario</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+					<div class="modal-body">
+						<form>
+							<input type="hidden" id="ed-codcli">
+							<div class="row">
+								<div class="col-6">
+									<div class="form-group">
+										<label for="ed-contacto">Contacto</label>
+										<select id="ed-contacto" class="form-control form-control-sm">
+											<option value="0" selected disabled>Seleccione</option>
+											@foreach($contactos as $contacto)
+											@if(strcmp($contacto->codigo,"Todos") != 0)
+											<option value="{{ $contacto->codigo }}">{{ $contacto->nombre }}</option>
+											@endif
+											@endforeach
+										</select>
+									</div>
+								</div>
+								<div class="col-6">
+									<div class="form-group">
+										<label for="ed-perfil">Tipo perfil</label>
+										<select id="ed-perfil" class="form-control form-control-sm">
+											<option value="0" selected disabled>Seleccione</option>
+											@foreach($perfiles as $perfil)
+											<option value="{{ $perfil->i_CodTipoPerfil }}">{{ $perfil->v_NombrePerfil }}</option>
+											@endforeach
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-3">
+									<div class="form-group">
+										<label for="ed-dni">DNI</label>
+										<input type="text" id="ed-dni" class="form-control form-control-sm" placeholder="Ingrese el DNI">
+									</div>
+								</div>
+								<div class="col-9">
+									<div class="form-group">
+										<label for="ed-nombre">Nombre</label>
+										<input type="text" id="ed-nombre" class="form-control form-control-sm" placeholder="Ingrese nombre completo del nuevo usuario">
+									</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-6">
+									<div class="form-group">
+										<label for="ed-idempleo">Id.Empleado</label>
+										<input type="text" id="ed-idempleo" class="form-control form-control-sm" placeholder="Ingrese Id. empleado">
+									</div>
+								</div>
+								<div class="col-6">
+									<div class="form-group">
+										<label for="ed-email">e-mail</label>
+										<input type="text" id="ed-email" class="form-control form-control-sm" placeholder="nombre@servidor.com">
+									</div>
+								</div>
+								<div class="col-6">
+									<div class="form-group">
+										<label for="ed-telefono">Teléfono</label>
+										<input type="text" id="ed-telefono" class="form-control form-control-sm" placeholder="###-###-###">
+									</div>
+								</div>
+							</div>
+							<div class="row">
 								<div class="col-4">
 									<div class="form-group">
-										<label for="nu-codigo1">Codigo 1</label>
-										<input type="text" id="nu-codigo"1 class="form-control form-control-sm" placeholder="Ingrese código 1">
+										<label for="ed-alias">Usuario</label>
+										<input type="text" id="ed-alias" class="form-control form-control-sm" placeholder="Usuario">
 									</div>
 								</div>
 								<div class="col-4">
 									<div class="form-group">
-										<label for="nu-codigo2">Codigo 2</label>
-										<input type="password" id="nu-codigo2" class="form-control form-control-sm" placeholder="Ingrese código 2">
+										<label for="ed-clave">Clave</label>
+										<input type="password" id="ed-clave" class="form-control form-control-sm" placeholder="Ingresar clave">
 									</div>
 								</div>
 								<div class="col-4">
 									<div class="form-group">
-										<label for="nu-codigo3">Codigo 3</label>
-										<input type="password" id="nu-codigo3" class="form-control form-control-sm" placeholder="Ingrese código 3">
+										<label for="ed-rclave">Repetir clave</label>
+										<input type="password" id="ed-rclave" class="form-control form-control-sm" placeholder="Repetir la clave">
 									</div>
 								</div>
-							</div-->
+							</div>
 						</form>
 					</div>
 					<div class="modal-footer">
@@ -216,7 +298,12 @@
 								$("<td/>").html(usuario.NomAreaCliente)
 							).append(
 								$("<td/>").append(
-									$("<a/>").attr("href","#").addClass("btn btn-success btn-xs").append(
+									$("<a/>").attr({
+										"href": "#",
+										"data-toggle": "modal",
+										"data-target": "#modal-edit",
+										"data-id": usuario.v_Codusuario
+									}).addClass("btn btn-success btn-xs").append(
 										$("<i/>").addClass("fa fa-pencil")
 									).append(" Editar")
 								)
@@ -255,6 +342,22 @@
 							document.getElementById("nu-telefono").value = data.telefono;
 							document.getElementById("nu-dni").value = data.dni;
 							document.getElementById("nu-codcli").value = data.codcli;
+						}
+					}, "json");
+				}
+			});
+			$("#ed-contacto").on("change", function(e) {
+				var contacto = document.getElementById("ed-contacto").value;
+				if(contacto > 0) {
+					var p = { _token:"{{ csrf_token() }}",ctc:contacto };
+					$.post("{{ url('usuarios/ajax/cmb-contacto') }}", p, function(response) {
+						if(response.state == "success") {
+							var data = response.data;
+							document.getElementById("ed-codcli").value = data.codcli;
+							if(document.getElementById("ed-nombre").value == "") document.getElementById("ed-nombre").value = data.nombre;
+							if(document.getElementById("ed-email").value == "") document.getElementById("ed-email").value = data.email;
+							if(document.getElementById("ed-telefono").value == "") document.getElementById("ed-telefono").value = data.telefono;
+							if(document.getElementById("ed-dni").value == "") document.getElementById("ed-dni").value = data.dni;
 						}
 					}, "json");
 				}
@@ -304,6 +407,13 @@ console.log(error);
 				var oficina = document.getElementById("oficina").value;
 				var nombre = document.getElementById("filtro-usuario").value;
 				CargaUsuarios(oficina, nombre);
+			});
+			$("#modal-edit").on("show.bs.modal", function(e) {
+				var id = e.relatedTarget.dataset.id;
+				var p = { _token:"{{ csrf_token() }}",uid:id };
+				$.post("{{ url('usuarios/ajax/dt-usuario') }}", p, function(response) {}, "json").fail(function(error) {
+					//
+				});
 			});
 		</script>
 	</body>

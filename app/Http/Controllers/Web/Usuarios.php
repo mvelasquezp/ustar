@@ -79,4 +79,22 @@ class Usuarios extends Controller {
         ]);
     }
 
+    public function dt_usuario() {
+        $user = Auth::user();
+        extract(Request::input());
+        if(isset($uid)) {
+            $usuario = DB::table("seg_user")
+                ->where("v_Codusuario", $uid)
+                ->first();
+            return Response::json([
+                "state" => "success",
+                "data" => $usuario
+            ]);
+        }
+        return Response::json([
+            "state" => "error",
+            "message" => "Parámetros de búsqueda incorrectos"
+        ]);
+    }
+
 }

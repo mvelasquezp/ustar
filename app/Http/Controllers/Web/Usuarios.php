@@ -85,10 +85,83 @@ class Usuarios extends Controller {
         if(isset($uid)) {
             $usuario = DB::table("seg_user")
                 ->where("v_Codusuario", $uid)
+                ->select("v_Nombres as nombres","v_NroDocide as docid","v_Email as mail","v_Telefonos as tlf","v_IdPerCliente as ipc",
+                    "i_CodCliente as codcli","i_CodContacto as codcon","i_CodTipoPerfil as tperfil")
                 ->first();
             return Response::json([
                 "state" => "success",
                 "data" => $usuario
+            ]);
+        }
+        return Response::json([
+            "state" => "error",
+            "message" => "Parámetros de búsqueda incorrectos"
+        ]);
+    }
+
+    public function upd_usuario() {
+        $user = Auth::user();
+        extract(Request::input());
+        if(isset($als,$nom,$dni,$eml,$tlf,$eid,$ccl,$ctc,$psw,$prf)) {
+            $cd1 = isset($cd1) ? $cd1 : "";
+            $cd2 = isset($cd2) ? $cd2 : "";
+            $cd3 = isset($cd3) ? $cd3 : "";
+            DB::table("seg_user")->where("v_Codusuario", $als)->update([
+                "v_Nombres" => $nom,
+                "v_NroDocide" => $dni,
+                "v_Email" => $eml,
+                "v_Telefonos" => $tlf,
+                "v_IdPerCliente" => $eid,
+                "v_PerClienteAgrupa1" => $cd1,
+                "v_PerClienteAgrupa2" => $cd2,
+                "v_PerClienteAgrupa3" => $cd3,
+                "i_CodCliente" => $ccl,
+                "i_CodContacto" => $ctc,
+                "v_Clave" => $psw,
+                "i_CodTipoPerfil" => $prf
+            ]);
+            $usuarios = DB::select("call sp_web_usuarios_list(?,?,?)", [$user->v_Codusuario, "Todos", ""]);
+            return Response::json([
+                "state" => "success",
+                "data" => $usuarios
+            ]);
+        }
+        return Response::json([
+            "state" => "error",
+            "message" => "Parámetros de búsqueda incorrectos"
+        ]);
+    }
+
+    public function del_usuario() {
+        $user = Auth::user();
+        extract(Request::input());
+        if(isset($uid)) {
+            DB::table("seg_user")->where("v_Codusuario", $uid)->update([
+                "v_CodEstado" => "Anulado"
+            ]);
+            $usuarios = DB::select("call sp_web_usuarios_list(?,?,?)", [$user->v_Codusuario, "Todos", ""]);
+            return Response::json([
+                "state" => "success",
+                "data" => $usuarios
+            ]);
+        }
+        return Response::json([
+            "state" => "error",
+            "message" => "Parámetros de búsqueda incorrectos"
+        ]);
+    }
+
+    public function act_usuario() {
+        $user = Auth::user();
+        extract(Request::input());
+        if(isset($uid)) {
+            DB::table("seg_user")->where("v_Codusuario", $uid)->update([
+                "v_CodEstado" => "Vigente"
+            ]);
+            $usuarios = DB::select("call sp_web_usuarios_list(?,?,?)", [$user->v_Codusuario, "Todos", ""]);
+            return Response::json([
+                "state" => "success",
+                "data" => $usuarios
             ]);
         }
         return Response::json([

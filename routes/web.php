@@ -49,6 +49,9 @@ Route::group(["namespace" => "Web"], function() {
 			Route::post("cmb-contacto","Usuarios@cmb_contacto");
 			Route::post("ins-usuario","Usuarios@ins_usuario");
 			Route::post("dt-usuario","Usuarios@dt_usuario");
+			Route::post("upd-usuario","Usuarios@upd_usuario");
+			Route::post("del-usuario","Usuarios@del_usuario");
+			Route::post("act-usuario","Usuarios@act_usuario");
 		});
 	});
 	//autenticacion de usuarios

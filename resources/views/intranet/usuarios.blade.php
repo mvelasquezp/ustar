@@ -266,7 +266,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-						<button type="button" class="btn btn-primary" id="btn-guardar"><i class="fa fa-floppy-o"></i> Guardar</button>
+						<button type="button" class="btn btn-primary" id="btn-editar"><i class="fa fa-floppy-o"></i> Guardar</button>
 					</div>
 				</div>
 			</div>
@@ -278,6 +278,34 @@
 			document.getElementById("filtro-usuario").value = "";
 			$("#oficina option[value=0]").prop("selected", true);
 			//
+			function activaUsuario(e) {
+				e.preventDefault();
+				var id = $(this).data("id");
+				if(window.confirm("¿Seguro que desea activar al usuario?")) {
+					var p = { _token:"{{ csrf_token() }}", uid:id };
+					$.post("{{ url('usuarios/ajax/act-usuario') }}", p, function(response) {
+						if(response.state == "success") {
+							usuarios = response.data;
+							CargaUsuarios(document.getElementById("oficina").value, document.getElementById("filtro-usuario").value);
+						}
+						else alert(response.message);
+					}, "json");
+				}
+			}
+			function retiraUsuario(e) {
+				e.preventDefault();
+				var id = $(this).data("id");
+				if(window.confirm("¿Seguro que desea retirar al usuario?")) {
+					var p = { _token:"{{ csrf_token() }}", uid:id };
+					$.post("{{ url('usuarios/ajax/del-usuario') }}", p, function(response) {
+						if(response.state == "success") {
+							usuarios = response.data;
+							CargaUsuarios(document.getElementById("oficina").value, document.getElementById("filtro-usuario").value);
+						}
+						else alert(response.message);
+					}, "json");
+				}
+			}
 			function CargaUsuarios(oficina, nombre) {
 				var tbody = $("#usuarios-tbody").empty();
 				for(var i in usuarios) {
@@ -285,13 +313,13 @@
 					if((oficina == 0 || usuario.cod_ofic == oficina) && (nombre == "" || usuario.nombre.toLowerCase().indexOf(nombre.toLowerCase()) > -1)) {
 						tbody.append(
 							$("<tr/>").append(
-								$("<td/>").append(
-									$("<a/>").attr("href","#").addClass("btn btn-primary btn-xs").html(usuario.v_Codusuario)
-								)
+								$("<td/>").html(usuario.v_Codusuario)
 							).append(
 								$("<td/>").html(usuario.nombre)
 							).append(
-								$("<td/>").html(usuario.v_CodEstado)
+								$("<td/>").append(
+									$("<a/>").attr("href","#").addClass("btn btn-xs" + (usuario.v_CodEstado == "Vigente" ? " btn-primary" : " btn-danger")).html(usuario.v_CodEstado)
+								)
 							).append(
 								$("<td/>").html(usuario.v_NombrePerfil)
 							).append(
@@ -303,15 +331,15 @@
 										"data-toggle": "modal",
 										"data-target": "#modal-edit",
 										"data-id": usuario.v_Codusuario
-									}).addClass("btn btn-success btn-xs").append(
+									}).addClass("btn btn-info btn-xs").append(
 										$("<i/>").addClass("fa fa-pencil")
 									).append(" Editar")
 								)
 							).append(
 								$("<td/>").append(
-									$("<a/>").attr("href","#").addClass("btn btn-danger btn-xs").append(
+									$("<a/>").attr("href","#").addClass("btn btn-xs" + (usuario.v_CodEstado == "Vigente" ? " btn-danger" : " btn-success")).attr("data-id", usuario.v_Codusuario).append(
 										$("<i/>").addClass("fa fa-remove")
-									).append(" Retirar")
+									).append(usuario.v_CodEstado == "Vigente" ? " Retirar" : " Activar").on("click",usuario.v_CodEstado == "Vigente" ? retiraUsuario : activaUsuario)
 								)
 							)
 						);
@@ -390,8 +418,10 @@
 								usuarios = response.data;
 								$("#btn-form").trigger("click");
 								$("#modal-insert").modal("hide");
+								//
+								CargaUsuarios(document.getElementById("oficina").value, document.getElementById("filtro-usuario").value);
 							}
-							else alert(response.msg);
+							else alert(response.message);
 							$("#btn-guardar").show();
 						}, "json").fail(function(error) {
 							$("#btn-guardar").show();
@@ -409,11 +439,84 @@ console.log(error);
 				CargaUsuarios(oficina, nombre);
 			});
 			$("#modal-edit").on("show.bs.modal", function(e) {
+				$("#btn-editar").hide();
 				var id = e.relatedTarget.dataset.id;
 				var p = { _token:"{{ csrf_token() }}",uid:id };
-				$.post("{{ url('usuarios/ajax/dt-usuario') }}", p, function(response) {}, "json").fail(function(error) {
-					//
+				$.post("{{ url('usuarios/ajax/dt-usuario') }}", p, function(response) {
+					if(response.state == "success") {
+						var usuario = response.data;
+						document.getElementById("ed-nombre").value = usuario.nombres;
+						document.getElementById("ed-dni").value = usuario.docid;
+						document.getElementById("ed-email").value = usuario.mail;
+						document.getElementById("ed-telefono").value = usuario.tlf;
+						document.getElementById("ed-idempleo").value = usuario.ipc;
+						document.getElementById("ed-codcli").value = usuario.codcli;
+						document.getElementById("ed-clave").value = "sapazo";
+						document.getElementById("ed-rclave").value = "sapazo";
+						document.getElementById("ed-alias").value = id;
+						$("#ed-contacto option[value=" + usuario.codcon + "]").prop("selected",true);
+						$("#ed-perfil option[value=" + usuario.tperfil + "]").prop("selected",true);
+					}
+					else alert(response.message);
+					$("#btn-editar").show();
+				}, "json").fail(function(error) {
+					$("#modal-edit").modal("hide");
+console.log(error);
 				});
+			});
+			//
+			$("#btn-editar").on("click", function(e) {
+				e.preventDefault();
+				$("#btn-editar").hide();
+				var clave = document.getElementById("ed-clave").value;
+				var rclave = document.getElementById("ed-rclave").value;
+				if(document.getElementById("ed-contacto").value != 0 && document.getElementById("ed-perfil").value != 0) {
+					if(clave == rclave) {
+						var p = {
+							_token: "{{ csrf_token() }}",
+							nom: document.getElementById("ed-nombre").value,
+							dni: document.getElementById("ed-dni").value,
+							eml: document.getElementById("ed-email").value,
+							tlf: document.getElementById("ed-telefono").value,
+							eid: document.getElementById("ed-idempleo").value,
+							ccl: document.getElementById("ed-codcli").value,
+							ctc: document.getElementById("ed-contacto").value,
+							psw: clave,
+							prf: document.getElementById("ed-perfil").value,
+							als: document.getElementById("ed-alias").value
+						};
+						$.post("{{ url('usuarios/ajax/upd-usuario') }}", p, function(response) {
+							if(response.state == "success") {
+								usuarios = response.data;
+								$("#btn-form").trigger("click");
+								$("#modal-edit").modal("hide");
+							}
+							else alert(response.message);
+							$("#btn-editar").show();
+							//
+							CargaUsuarios(document.getElementById("oficina").value, document.getElementById("filtro-usuario").value);
+						}, "json").fail(function(error) {
+							$("#btn-editar").show();
+console.log(error);
+						});
+					}
+					else alert("Las claves deben ser iguales");
+				}
+				else alert("Seleccione un contacto y perfil válidos");
+			});
+			//
+			$("#modal-edit").on("hidden.bs.modal", function(e) {
+				document.getElementById("ed-nombre").value = "";
+				document.getElementById("ed-dni").value = "";
+				document.getElementById("ed-email").value = "";
+				document.getElementById("ed-telefono").value = "";
+				document.getElementById("ed-idempleo").value = "";
+				document.getElementById("ed-codcli").value = "";
+				document.getElementById("ed-contacto").value = "";
+				document.getElementById("ed-codcli").value = "";
+				document.getElementById("ed-clave").value = "";
+				document.getElementById("ed-rclave").value = "";
+				document.getElementById("ed-alias").value = "";
 			});
 		</script>
 	</body>

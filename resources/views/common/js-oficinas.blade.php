@@ -1,6 +1,7 @@
 <script>
 	var arr_ofcs = ["Todos"];
 	document.getElementById("trg-oficina").value = "Todos";
+	$("#modal-oficina input[type=checkbox]").prop("checked",true);
 	//modal oficina
 	$("#trg-oficina").on("click", function() {
 		$("#modal-oficina").modal("show");

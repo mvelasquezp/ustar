@@ -58,12 +58,14 @@ class Indicadores extends Controller {
             $prd = implode(",", $prd);
             $ofc = implode(",", $ofc);
             $data1 = DB::select("call sp_web_grafica_distribu1_list(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
-            $data2 = DB::select("call sp_web_grafica_distribu2_list(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
+            $data2 = DB::select("call sp_web_grafica_distribu_list_g2(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
+            $data3 = DB::select("call sp_web_grafica_distribu2_list(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
             return Response::json([
                 "state" => "success",
                 "data" => [
                     "data1" => $data1,
-                    "data2" => $data2
+                    "data2" => $data2,
+                    "data3" => $data3
                 ]
             ]);
         }

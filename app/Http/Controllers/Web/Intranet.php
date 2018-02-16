@@ -66,12 +66,14 @@ class Intranet extends Controller {
         $user = Auth::user();
         $cmb_oficinas = DB::select("call sp_web_combo_areas(?)", [$user->v_Codusuario]);
         $cmb_productos = DB::select("call sp_web_combo_tipoenvios(?)", [$user->v_Codusuario]);
+        $cmb_ciclos = DB::select("call sp_web_combo_periodos(?)", [$user->v_Codusuario]);
         $arrData = [
             "usuario" => $user,
             "menu" => 4,
             "opcion" => "Indicadores > Entregas",
             "ofcs" => $cmb_oficinas,
-            "prds" => $cmb_productos
+            "prds" => $cmb_productos,
+            "ciclos" => $cmb_ciclos
         ];
         return view("intranet.identregas")->with($arrData);
     }

@@ -1,6 +1,7 @@
 <script type="text/javascript">
 	var arr_ccs = ["Todos"];
 	document.getElementById("trg-ccosto").value = "Todos";
+	$("#modal-ccosto input[type=checkbox]").prop("checked",true);
 	//modal ccosto
 	$("#trg-ccosto").on("click", function() {
 		$("#modal-ccosto").modal("show");

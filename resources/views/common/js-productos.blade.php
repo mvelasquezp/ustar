@@ -1,6 +1,7 @@
 <script type="text/javascript">
 	var arr_prds = ["Todos"];
 	document.getElementById("trg-producto").value = "Todos";
+	$("#modal-producto input[type=checkbox]").prop("checked",true);
 	//modal producto
 	$("#trg-producto").on("click", function() {
 		$("#modal-producto").modal("show");

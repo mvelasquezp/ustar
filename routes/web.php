@@ -54,6 +54,19 @@ Route::group(["namespace" => "Web"], function() {
 			Route::post("act-usuario","Usuarios@act_usuario");
 		});
 	});
+	//reclamos
+	Route::prefix("reclamos")->group(function() {
+		Route::get("/", "Intranet@reclamos");
+		Route::prefix("ajax")->group(function() {
+			Route::post("buscar", "Reclamos@buscar");
+			Route::post("detalle", "Reclamos@detalle");
+			Route::post("elimina", "Reclamos@elimina");
+			Route::post("combo", "Reclamos@combo");
+			Route::post("dt-reclamo", "Reclamos@dt_reclamo");
+			Route::post("sv-reclamo", "Reclamos@sv_reclamo");
+			Route::post("upd-reclamo", "Reclamos@upd_reclamo");
+		});
+	});
 	//autenticacion de usuarios
 	Route::group(["prefix" => "login"], function() {
 		Route::get("/", ["as" => "login", "uses" => "Autenticacion@form_login"]);

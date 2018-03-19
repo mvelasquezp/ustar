@@ -200,7 +200,6 @@
 									}
 									carr_indicators.append(li);
 									carr_inner.append(div);
-//console.log();
 								}
 								carrusel = $("<div/>").addClass("carousel slide").attr({
 									"data-ride": "carousel",

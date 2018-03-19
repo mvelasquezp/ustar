@@ -62,6 +62,18 @@ class Intranet extends Controller {
         return view("intranet.tracking")->with($arrData);
     }
 
+    public function reclamos() {
+        $user = Auth::user();
+        $tipos = DB::select("call sp_web_combo_motireclamo(?)", ["C"]);
+        $arrData = [
+            "usuario" => $user,
+            "menu" => 3,
+            "opcion" => "Usuarios",
+            "tipos" => $tipos
+        ];
+        return view("intranet.reclamos")->with($arrData);
+    }
+
     public function ind_dis_entregas() {
         $user = Auth::user();
         $cmb_oficinas = DB::select("call sp_web_combo_areas(?)", [$user->v_Codusuario]);

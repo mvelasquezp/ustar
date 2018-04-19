@@ -4,6 +4,9 @@
 		<title>Servicios | Distribución</title>
 		@include("common.styles")
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/datepicker.min.css') }}">
+		<style type="text/css">
+			.table-responsive{max-height:1000px !important;}
+		</style>
 	</head>
 	<body>
 		@include("common.navbar")
@@ -104,6 +107,10 @@
 						<a class="page-link" href="#">Next</a>
 					</li>
 				</ul>
+				<div class="floating-buttons-container">
+					<a id="btn-xls" href="#" class="btn btn-success btn-circle" title="Exportar a XLS"><i class="fa fa-file-excel-o"></i></a>
+					<!--a id="btn-correo" href="#" class="btn btn-danger btn-circle" title="Enviar por correo"><i class="fa fa-envelope-o"></i></a-->
+				</div>
 			</nav>
 		</div>
 		@if(strcmp($usuario->tp_cliente,'admin') == 0)
@@ -470,6 +477,33 @@
 					else alert(response.message);
 					a.show();
 					$("#loader-busqueda").fadeOut(150);
+				}, "json");
+			});
+			$("#dv-table").children("div").children("div").children("div").css("height", (window.innerHeight - 235) + "px");
+			$("#btn-xls").on("click", function(event) {
+				event.preventDefault();
+				var p = {
+					_token: "{{ csrf_token() }}",
+					dsd: document.getElementById("fdesde").value,
+					hst: document.getElementById("fhasta").value,
+					ofc: arr_ofcs,
+					ccs: arr_ccs,
+					prd: arr_prds,
+					loc: document.getElementById("tplocal").checked ? 'S' : 'N',
+					nac: document.getElementById("tpnacional").checked ? 'S' : 'N',
+					int: document.getElementById("tpinternacional").checked ? 'S' : 'N'
+				};
+				var loader = window.open("{{ url('export') }}", "_blank", "height=420,scrollbars=no,titlebar=no,toolbar=no,width=540");
+				$.post("{{ url('servicios/distribucion/ajax/export') }}", p, function(response) {
+					if(response.state == "success") {
+						setTimeout(function() {
+							loader.location.href = "{{ url('download') }}/" + response.id;
+							setTimeout(function() {
+								loader.close();
+							}, 10000);
+						}, 1000);
+					}
+					else alert(response.message);
 				}, "json");
 			});
 		</script>

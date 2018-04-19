@@ -118,4 +118,16 @@ class Intranet extends Controller {
         readfile($file);
     }
 
+    public function export() {
+        return view("intranet.export");
+    }
+
+    public function download($filename) {
+        $filepath = implode(DIRECTORY_SEPARATOR, [env("APP_FILES_PATH"), $filename . ".xls"]);
+        header("Content-Type: " . pathinfo($filepath, PATHINFO_EXTENSION));
+        header("Content-Length: ". filesize($filepath));
+        header("Content-Disposition: attachment; filename=export.xls");
+        readfile($filepath);
+    }
+
 }

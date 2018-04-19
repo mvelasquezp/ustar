@@ -17,12 +17,16 @@ Route::get('/', function () {
 Route::group(["namespace" => "Web"], function() {
 	Route::get("/", "Intranet@home");
 	Route::get("viewer/{param}", "Intranet@viewer");
+	Route::get("export", "Intranet@export");
+	Route::get("download/{filename}", "Intranet@download");
+	//servicios
 	Route::group(["prefix" => "servicios"], function() {
 		Route::group(["prefix" => "distribucion"], function() {
 			Route::get("/", "Intranet@srv_distribucion");
 			Route::group(["prefix" => "ajax"], function() {
 				Route::post("buscar", "Servicios@distribucion_buscar");
 				Route::post("detalle", "Servicios@distribucion_detalle");
+				Route::post("export", "Servicios@export");
 			});
 		});
 		Route::get("almacenes", "Intranet@srv_almacenes");
@@ -33,6 +37,7 @@ Route::group(["namespace" => "Web"], function() {
 		Route::group(["prefix" => "ajax"], function() {
 			Route::post("buscar", "Tracking@buscar");
 			Route::post("detalle", "Tracking@detalle");
+			Route::post("export", "Tracking@export");
 		});
 	});
 	//indicadores
@@ -65,6 +70,7 @@ Route::group(["namespace" => "Web"], function() {
 			Route::post("dt-reclamo", "Reclamos@dt_reclamo");
 			Route::post("sv-reclamo", "Reclamos@sv_reclamo");
 			Route::post("upd-reclamo", "Reclamos@upd_reclamo");
+			Route::post("export", "Reclamos@export");
 		});
 	});
 	//autenticacion de usuarios

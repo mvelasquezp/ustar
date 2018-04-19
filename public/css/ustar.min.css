@@ -12,3 +12,5 @@ label.form-control-sm{padding:5px}
 .tr-detalle>td>.dv-loader>*{display:inline-block;vertical-align:middle}
 .tr-detalle>td>.dv-loader>img{height:64px;width:64px}
 .tr-detalle>td>.dv-loader>p{font-size:14px;margin:0;text-align:left}
+.floating-buttons-container{bottom: 10px;position:fixed;right:10px}
+.btn-circle{border-radius:20px;display:inline-block;height:40px;margin:2px;width:40px}

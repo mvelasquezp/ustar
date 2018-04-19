@@ -160,4 +160,49 @@ class Reclamos extends Controller {
         ]);
     }
 
+    public function export() {
+        extract(Request::input());
+        if(isset($dsd, $hst, $pnd, $prc, $npr)) {
+            $user = Auth::user();
+            $vDesde = explode("/", $dsd);
+            $desde = implode("-", [$vDesde[2], $vDesde[1], $vDesde[0]]);
+            $vHasta = explode("/", $hst);
+            $hasta = implode("-", [$vHasta[2], $vHasta[1], $vHasta[0]]);
+            $registros = DB::select("call sp_web_reclamos_list(?,?,?,?,?,?)", [$user->v_Codusuario, $desde, $hasta, $pnd, $prc, $npr]);
+            //prepara el pinche excel
+            $filename = implode("_", [$user->v_Codusuario, date("YmdHis")]);
+            $data = "<table>";
+            $data .= "<tr>
+                <th style=\"background:#202020;color:#ffffff;border:1px solid #e0e0e0;\">FechaIng</th>
+                <th style=\"background:#202020;color:#ffffff;border:1px solid #e0e0e0;\">Asunto</th>
+                <th style=\"background:#202020;color:#ffffff;border:1px solid #e0e0e0;\">Motivo</th>
+                <th style=\"background:#202020;color:#ffffff;border:1px solid #e0e0e0;\">Estado</th>
+                <th style=\"background:#202020;color:#ffffff;border:1px solid #e0e0e0;\">Registrado</th>
+            </tr>";
+            foreach ($registros as $idx => $resultado) {
+                $data .= "<tr>
+                    <td style=\"border:1px solid #e0e0e0;vertical-align:middle;" . ($idx % 2 == 0 ? "background:#f2f2f2;" : "background:#ffffff;") . "\">" . utf8_decode($resultado->fecharesultado) . "</td>
+                    <td style=\"border:1px solid #e0e0e0;vertical-align:middle;" . ($idx % 2 == 0 ? "background:#f2f2f2;" : "background:#ffffff;") . "\">" . utf8_decode($resultado->detallereclamo) . "</td>
+                    <td style=\"border:1px solid #e0e0e0;vertical-align:middle;" . ($idx % 2 == 0 ? "background:#f2f2f2;" : "background:#ffffff;") . "\">" . utf8_decode($resultado->respuesta) . "</td>
+                    <td style=\"border:1px solid #e0e0e0;vertical-align:middle;" . ($idx % 2 == 0 ? "background:#f2f2f2;" : "background:#ffffff;") . "\">" . utf8_decode($resultado->estado) . "</td>
+                    <td style=\"border:1px solid #e0e0e0;vertical-align:middle;" . ($idx % 2 == 0 ? "background:#f2f2f2;" : "background:#ffffff;") . "\">" . utf8_decode($resultado->registra) . "</td>
+                </tr>";
+            }
+            $data .= "</table>";
+            @mkdir(env("APP_FILES_PATH"), 0777, true);
+            $f = fopen(implode(DIRECTORY_SEPARATOR, [env("APP_FILES_PATH"), $filename . ".xls"]) , "wb");
+            fwrite($f, $data);
+            fclose($f);
+            //devuelve respuesta
+            return Response::json([
+                "state" => "success",
+                "id" => $filename
+            ]);
+        }
+        return Response::json([
+            "state" => "error",
+            "message" => "Parámetros de búsqueda incorrectos"
+        ]);
+    }
+
 }

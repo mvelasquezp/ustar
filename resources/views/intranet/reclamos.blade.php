@@ -4,6 +4,9 @@
 		<title>Reclamos</title>
 		@include("common.styles")
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/datepicker.min.css') }}">
+		<style type="text/css">
+			.table-responsive{max-height:1000px !important;}
+		</style>
 	</head>
 	<body>
 		@include("common.navbar")
@@ -69,6 +72,10 @@
 						<a class="page-link" href="#">Next</a>
 					</li>
 				</ul>
+				<div class="floating-buttons-container">
+					<a id="btn-xls" href="#" class="btn btn-success btn-circle" title="Exportar a XLS"><i class="fa fa-file-excel-o"></i></a>
+					<!--a id="btn-correo" href="#" class="btn btn-danger btn-circle" title="Enviar por correo"><i class="fa fa-envelope-o"></i></a-->
+				</div>
 			</nav>
 		</div>
 		<!-- loader de búsqueda -->
@@ -460,6 +467,30 @@
 						else alert(response.message);
 					}, "json");
 				}
+			});
+			$("#dv-table").children("div").children("div").children("div").css("height", (window.innerHeight - 235) + "px");
+			$("#btn-xls").on("click", function(event) {
+				event.preventDefault();
+				var p = {
+					_token: "{{ csrf_token() }}",
+					dsd: document.getElementById("fdesde").value,
+					hst: document.getElementById("fhasta").value,
+					pnd: document.getElementById("pendientes").checked ? 1 : 0,
+					prc: document.getElementById("procede").checked ? 1 : 0,
+					npr: document.getElementById("noprocede").checked ? 1 : 0
+				};
+				var loader = window.open("{{ url('export') }}", "_blank", "height=420,scrollbars=no,titlebar=no,toolbar=no,width=540");
+				$.post("{{ url('reclamos/ajax/export') }}", p, function(response) {
+					if(response.state == "success") {
+						setTimeout(function() {
+							loader.location.href = "{{ url('download') }}/" + response.id;
+							setTimeout(function() {
+								loader.close();
+							}, 10000);
+						}, 1000);
+					}
+					else alert(response.message);
+				}, "json");
 			});
 		</script>
 	</body>

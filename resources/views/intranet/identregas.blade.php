@@ -95,7 +95,7 @@
 		</div>
 		<div id="chart-container" class="container">
 			<div class="row">
-				<div class="col-4" style="max-height:840px;overflow-y:auto">
+				<!--div class="col-4" style="max-height:840px;overflow-y:auto">
 					<table class="table table-striped table-sm">
 						<thead>
 							<tr>
@@ -108,7 +108,8 @@
 						<tbody id="chart-tbody-1"></tbody>
 					</table>
 				</div>
-				<div class="col-8">
+				<div class="col-8"-->
+				<div class="col-12">
 					<div class="row">
 						<div class="col">
 							<div id="chart-1" class="div-chart"></div>

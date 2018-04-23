@@ -114,8 +114,31 @@ class Intranet extends Controller {
         $file = implode(DIRECTORY_SEPARATOR, [env("APP_STORAGE_PATH"), str_replace("@", DIRECTORY_SEPARATOR, $param)]);
         $type = "image/jpeg";
         header("Content-Type:" . $type);
-        header("Content-Length: " . filesize($file));
-        readfile($file);
+        define("DST_HEIGHT", 540);
+        define("DST_WIDTH", 900);
+        $imgOutput = imagecreatetruecolor(DST_WIDTH,DST_HEIGHT);
+        $gray = imagecolorallocate($imgOutput, 32, 32, 32);
+        imagefill($imgOutput, 0, 0, $gray);
+        $imgInput = imagecreatefromjpeg($file);
+        list($width, $height) = getimagesize($file);
+        $scale = $height / DST_HEIGHT;
+        $newHeight = DST_HEIGHT;
+        $newWidth = (int) ($width / $scale);
+        $extra = (int) ((DST_WIDTH - $newWidth) / 2);
+        if($height < $width) {
+            $scale = (int) ($width / DST_WIDTH);
+            $newHeight = $height / $scale;
+            $newWidth = DST_WIDTH;
+            $extra = (int) ((DST_HEIGHT - $newHeight) / 2);
+            imagecopyresampled($imgOutput, $imgInput, 0, $extra, 0, 0, $newWidth, $newHeight, $width, $height);
+        }
+        else {
+            imagecopyresampled($imgOutput, $imgInput, $extra, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        }
+        header("Content-Type:" . $type);
+        imagejpeg($imgOutput, null, 75);
+        // Liberar memoria
+        imagedestroy($im);
     }
 
     public function export() {

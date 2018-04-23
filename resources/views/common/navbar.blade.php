@@ -57,7 +57,7 @@
 							<!-- -->
 							<div class="dropdown-menu" aria-labelledby="indicadorDropdown">
 								<a class="dropdown-item" href="{{ url('indicadores/d-entregas') }}"><i class="fa fa-paper-plane"></i> Distribución - Entregas</a>
-								<a class="dropdown-item" href="{{ url('indicadores/d-reclamos') }}"><i class="fa fa-exclamation-circle"></i> Distribución - Reclamos</a>
+								<!--a class="dropdown-item" href="{{ url('indicadores/d-reclamos') }}"><i class="fa fa-exclamation-circle"></i> Distribución - Reclamos</a>
 								<!--div class="dropdown-divider"></div-->
 					        </div>
 						</li>

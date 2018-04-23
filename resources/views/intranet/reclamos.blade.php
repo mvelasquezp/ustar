@@ -352,7 +352,7 @@
 				for(var i in motivos) {
 					var motivo = motivos[i];
 					$("#mtvo").append(
-						$("<option/>").val(motivo.codigo).html(motivo.respuesta)
+						$("<option/>").val(motivo.codigo).html(motivo.descripcion)
 					);
 				}
 			}

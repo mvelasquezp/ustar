@@ -29,4 +29,9 @@ Route::group(["prefix" => "ustar"], function() {
 	Route::any("entregas", "WebService@ls_lista_entregas");
 	Route::any("upd-entrega", "WebService@upd_entrega");
 	Route::any("upd-imagen", "WebService@upd_imagen");
+	//nuevos ustar
+	Route::any("ls-datos", "WebService@ls_datos_adicionales");
+	Route::any("ls-galeria-paquete", "WebService@ls_galeria_paquete");
+	Route::any("sv-imagen", "WebService@sv_imagen");
+	Route::any("dt-imagen", "WebService@dt_imagen");
 });

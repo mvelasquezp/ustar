@@ -20,6 +20,7 @@ class WebService extends Controller {
     public function __construct() {
         //$this->middleware("ws")->except("home");
         date_default_timezone_set("America/Lima");
+        ini_set("max_execution_time",0);
     }
 
     public function home() {
@@ -143,7 +144,8 @@ class WebService extends Controller {
                 ->where("NroManifiesto", $mnf)
                 ->update([
                     "CodProveedor" => $prv,
-                    "Importe" => $imp,
+                    //"Importe" => $imp,
+                    "NroBultos" => $imp,
                     "UserDespachador" => $cpr,
                     "NroDocuProv" => $doc
                 ]);
@@ -263,7 +265,7 @@ class WebService extends Controller {
 
     public function upd_entrega() {
         extract(Request::input());
-        if(isset($cpr,$agn,$prc,$ctr,$mot,$jst,$est,$obs)) {
+        if(isset($cpr,$agn,$prc,$ctr,$mot,$jst,$est,$obs,$lat,$lng)) {
             DB::table("envios_x_proceso")
                 ->where("CodAutogen", $agn)
                 ->where("NroProceso", $prc)
@@ -283,9 +285,31 @@ class WebService extends Controller {
                 "CodControlista" => $cpr,
                 "FecVisita" => date("Y-m-d H:i:s")
             ]);
+            //nuevo
+            DB::table("envios_x_proceso_seg")
+                ->where("CodAutogen", $agn)
+                ->where("NroProceso", $prc)
+                ->where("NroControl", $ctr)
+                ->where("FlgUltimo", "S")
+                ->update([
+                    "Latitud" => $lat,
+                    "Longitud" => $lng,
+                ]);
+            $telefono = DB::table("datos_adicionales")
+                ->where("CodAutogen", $agn)
+                ->where("NroProceso", $prc)
+                ->where("NroControl", $ctr)
+                ->select("NroTelefDesti as telefono")
+                ->get();
+            $telefono = count($telefono) > 0 ? ("51" . $telefono[0]->telefono) : "";
             return Response::json([
                 "result" => "success",
                 "rqid" => 402,
+                "data" => [
+                    "motivo" => $mot,
+                    "justifica" => $jst,
+                    "numero" => $telefono
+                ],
                 "message" => "Registro actualizado!"
             ]);
         }
@@ -341,6 +365,177 @@ class WebService extends Controller {
         else return Response::json([
             "result" => "error",
             "rqid" => 403,
+            "message" => "Parámetros incorrectos"
+        ]);
+    }
+
+    public function ls_datos_adicionales() {
+        extract(Request::input());
+        if(isset($agn, $proc, $ctrl)) {
+            $data = DB::select("select
+                    ifnull(NomEmpresaDesti,'x') as empresa,
+                    ifnull(NroTelefDesti,'x') as telefonos,
+                    ifnull(IdeDestinatario,'x') as docid,
+                    ifnull(email,'x') as mail,
+                    ifnull(CodCuentaCliente,'x') as codigo1,
+                    ifnull(NroDocuCliente,'x') as codigo2,
+                    ifnull(NroComprobante,'x') as codigo3,
+                    ifnull(Sector,'x') as codigo4,
+                    ifnull(GrupoCliente,'x') as codigo5,
+                    ifnull(Custom1,'x') as codigo6,
+                    ifnull(Custom1,'x') as codigo7,
+                    ifnull(Custom3,'x') as codigo8,
+                    ifnull(Custom4,'x') as codigo9,
+                    ifnull(Custom5,'x') as codigo10,
+                    ifnull(Custom6,'x') as codigo11
+                from datos_adicionales 
+                where codautogen = ? and nroproceso = ? and nrocontrol = ?", [$agn, $proc, $ctrl]);
+            $data = count($data) > 0 ? $data[0] : [
+                "empresa" => "Sin datos adicionales",
+                "telefonos" => "x",
+                "docid" => "x",
+                "mail" => "x",
+                "codigo1" => "x",
+                "codigo2" => "x",
+                "codigo3" => "x",
+                "codigo4" => "x",
+                "codigo5" => "x",
+                "codigo6" => "x",
+                "codigo7" => "x",
+                "codigo8" => "x",
+                "codigo9" => "x",
+                "codigo10" => "x",
+                "codigo11" => "x",
+            ];
+            return Response::json([
+                "result" => "success",
+                "rqid" => 404,
+                "data" => [
+                    "datos" => $data
+                ]
+            ]);
+        }
+        return Response::json([
+            "result" => "error",
+            "rqid" => 404,
+            "message" => "Parámetros incorrectos"
+        ]);
+    }
+
+    public function ls_galeria_paquete() {
+        extract(Request::input());
+        if(isset($origen, $destino, $periodo, $manifiesto)) {
+            $lista = DB::table("manifiesto_img as mimg")
+                ->leftJoin("tipos_documentos as td", "td.CodTipDocu", "=", DB::raw("'2'"))
+                ->where("mimg.CodAgenciaOrigen", $origen)
+                ->where("mimg.CodAgenciaDestino", $destino)
+                ->where("mimg.CodPeriodo", $periodo)
+                ->where("mimg.NroManifiesto", $manifiesto)
+                ->select(
+                    "mimg.DtmRegistra as fecha",
+                    DB::raw("ifnull(td.nomcarpetaimgActual,'MANIF') as path"),
+                    "mimg.NomImagen as nombre"
+                )
+                ->get();
+            foreach ($lista as $key => $row) {
+                $imgPath = implode(DIRECTORY_SEPARATOR, [env("APP_STORAGE_PATH"), $row->path, ($periodo . $origen . $destino), $row->nombre]);
+                if(file_exists($imgPath)) $lista[$key]->path = base64_encode(file_get_contents($imgPath));
+            }
+            return Response::json([
+                "result" => "success",
+                "rqid" => 405,
+                "data" => [
+                    "lista" => $lista
+                ]
+            ]);
+        }
+        return Response::json([
+            "result" => "error",
+            "rqid" => 405,
+            "message" => "Parámetros incorrectos"
+        ]);
+    }
+
+    public function sv_imagen() {
+        //APP_STORAGE_PATH
+        extract(Request::input());
+        if(isset($origen, $destino, $periodo, $manifiesto, $base64, $usuario)) {
+            $nomImg = DB::table("manifiesto_img")
+                ->where("CodAgenciaOrigen", $origen)
+                ->where("CodAgenciaDestino", $destino)
+                ->where("CodPeriodo", $periodo)
+                ->where("NroManifiesto", $manifiesto)
+                ->max("NroCorr");
+            $corr = $nomImg ? ($nomImg + 1) : 1;
+            $nomImg = $manifiesto . $corr . ".jpg";
+            $raiz = DB::table("tipos_documentos")
+                ->where("CodTipDocu", 2)
+                ->select("nomcarpetaimgActual as nombre")
+                ->first();
+            $carpeta = $periodo . $origen . $destino;
+            $raiz = $raiz->nombre ? $raiz->nombre : "MANIF";
+            $imgPath = implode(DIRECTORY_SEPARATOR, [env("APP_STORAGE_PATH"), $raiz, $carpeta]);
+            //aqui permisos
+            if(!file_exists(env("APP_STORAGE_PATH") . DIRECTORY_SEPARATOR . $raiz)) {
+                chmod(env("APP_STORAGE_PATH"), 0777);
+                mkdir(env("APP_STORAGE_PATH") . DIRECTORY_SEPARATOR . $raiz, true, 0777);
+            }
+            if(!file_exists(env("APP_STORAGE_PATH") . DIRECTORY_SEPARATOR . $raiz . DIRECTORY_SEPARATOR . $carpeta)) {
+                chmod(env("APP_STORAGE_PATH") . DIRECTORY_SEPARATOR . $raiz, 0777);
+                mkdir(env("APP_STORAGE_PATH") . DIRECTORY_SEPARATOR . $raiz . DIRECTORY_SEPARATOR . $carpeta, true, 0777);
+            }
+            chmod(env("APP_STORAGE_PATH") . DIRECTORY_SEPARATOR . $raiz . DIRECTORY_SEPARATOR . $carpeta, 0777);
+            //
+            //@mkdir($imgPath, true, 0777);
+            $imgFile = $imgPath . DIRECTORY_SEPARATOR . $nomImg;
+            //guarda la imagen
+            $b64decoded = base64_decode($base64);
+            file_put_contents($imgFile, $b64decoded);
+            //guarda en la bd
+            DB::table("manifiesto_img")->insert([
+                "CodAgenciaOrigen" => $origen,
+                "CodAgenciaDestino" => $destino,
+                "CodPeriodo" => $periodo,
+                "NroManifiesto" => $manifiesto,
+                "NroCorr" => $corr,
+                "NomImagen" => $nomImg,
+                "UserRegistra" => $usuario,
+                "DtmRegistra" => date("Y-m-d H:i:s")
+            ]);
+            return Response::json([
+                "result" => "success",
+                "rqid" => 406
+            ]);
+        }
+        return Response::json([
+            "result" => "error",
+            "rqid" => 406,
+            "message" => "Parámetros incorrectos"
+        ]);
+    }
+
+    public function dt_imagen() {
+        extract(Request::input());
+        if(isset($origen, $destino, $periodo, $manifiesto, $nombre)) {
+            $raiz = DB::table("tipos_documentos")
+                ->where("CodTipDocu", 2)
+                ->select("nomcarpetaimgActual as nombre")
+                ->first();
+            $raiz = $raiz->nombre ? $raiz->nombre : "MANIF";
+            $carpeta = $periodo . $origen . $destino;
+            $imgPath = implode(DIRECTORY_SEPARATOR, [env("APP_STORAGE_PATH"), $raiz, $carpeta, $nombre]);
+            $b64 = base64_encode(file_get_contents($imgPath));
+            return Response::json([
+                "result" => "success",
+                "rqid" => 407,
+                "data" => [
+                    "imagen" => $b64
+                ]
+            ]);
+        }
+        return Response::json([
+            "result" => "error",
+            "rqid" => 407,
             "message" => "Parámetros incorrectos"
         ]);
     }

@@ -34,6 +34,7 @@ class Servicios extends Controller {
             $sccs = implode(",", $ccs);
             $sprd = implode(",", $prd);
             $resultados = DB::select("call sp_web_servicios_distribu_list(?,?,?,?,?,?,?,?,?)", [$dsd, $hst, $sprd, $sofc, $sccs, $user->v_Codusuario, $loc, $nac, $int]);
+            foreach($resultados as $idx => $resultado) $resultados[$idx]->pos = $idx + 1;
             return Response::json([
                 "state" => "success",
                 "data" => [

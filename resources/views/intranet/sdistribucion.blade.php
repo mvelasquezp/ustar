@@ -3,10 +3,15 @@
 	<head>
 		<title>Servicios | Distribución</title>
 		@include("common.styles")
-		<link rel="stylesheet" type="text/css" href="{{ asset('data-tables/datatables.min.css') }}">
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/datepicker.min.css') }}">
+		<link rel="stylesheet" type="text/css" href="{{ asset('css/bootstrap-select.css') }}">
 		<style type="text/css">
 			.table-responsive{max-height:1000px !important;}
+			.col-sorter{
+				padding-left:12px !important;padding-right:12px !important;background-repeat:no-repeat;background-position:right center;background-size:12px 24px;text-align:center;cursor:pointer;-webkit-touch-callout: none;-webkit-user-select: none;-khtml-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;
+			}
+			.col-sorted-asc{background-image:url("{{ asset('images/icons/ic_sort_up.png') }}");}
+			.col-sorted-desc{background-image:url("{{ asset('images/icons/ic_sort_down.png') }}");}
 		</style>
 	</head>
 	<body>
@@ -24,12 +29,26 @@
 							@if(strcmp($usuario->tp_cliente,'admin') == 0)
 							<label class="form-control-sm" for="oficina">
 								Oficina&nbsp;
-								<input type="text" id="trg-oficina" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;">
+								<!--input type="text" id="trg-oficina" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;"-->
+								<select class="selectpicker" multiple data-live-search="true">
+									@foreach($ofcs as $idx => $oficina)
+									@if($idx != 0)
+									<option value="{{ $oficina->codigo }}">{{ $oficina->descripcion }}</option>
+									@endif
+									@endforeach
+								</select>
 							</label>
 							<!-- -->
 							<label class="form-control-sm" for="ccosto">
 								C. Costo&nbsp;
-								<input type="text" id="trg-ccosto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;">
+								<!--input type="text" id="trg-ccosto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;"-->
+								<select class="selectpicker" multiple data-live-search="true">
+									@foreach($ccts as $idx => $ccosto)
+									@if($idx != 0)
+									<option value="{{ $ccosto->codigo }}">{{ $ccosto->descripcion }}</option>
+									@endif
+									@endforeach
+								</select>
 							</label>
 							@else
 							<input type="hidden" id="oficina" class="ch-of" value="{{ $ofcs[0]->codigo }}">
@@ -38,7 +57,14 @@
 							<!-- -->
 							<label class="form-control-sm" for="producto">
 								Producto&nbsp;
-								<input type="text" id="trg-producto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;">
+								<!--input type="text" id="trg-producto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;"-->
+								<select class="selectpicker" multiple data-live-search="true">
+									@foreach($prds as $idx => $producto)
+									@if($idx != 0)
+									<option value="{{ $producto->codigo }}">{{ $producto->descripcion }}</option>
+									@endif
+									@endforeach
+								</select>
 							</label>
 							<!-- -->
 							<div class="form-check-inline">
@@ -71,24 +97,24 @@
 		<div id="dv-table" class="container-fluid">
 			<div class="row">
 				<div class="col">
-					<div class="table-responsive" id="table-container">
+					<div class="table-responsive">
 						<table class="table table-sm table-striped">
 							<thead class="thead-dark">
 								<tr>
-									<th>#</th>
-									<th>Origen</th>
-									<th>FechaIng</th>
-									<th>Docing</th>
-									<th>Remito</th>
-									<th>Servicio</th>
-									<th>Contenido</th>
-									<th>Cliente</th>
-									<th>Cant</th>
-									<th>Peso</th>
-									<th>Observaciones</th>
-									<th>Referencia</th>
-									<th>Contacto</th>
-									<th>C.Costo</th>
+									<th class="col-sorter" data-sort="0" data-idx="25">#</th>
+									<th class="col-sorter" data-sort="0" data-idx="0">Origen</th>
+									<th class="col-sorter" data-sort="0" data-idx="1">FechaIng</th>
+									<th class="col-sorter" data-sort="0" data-idx="2">Docing</th>
+									<th class="col-sorter" data-sort="0" data-idx="3">Remito</th>
+									<th class="col-sorter" data-sort="0" data-idx="5">Servicio</th>
+									<th class="col-sorter" data-sort="0" data-idx="18">Contenido</th>
+									<th class="col-sorter" data-sort="0" data-idx="6">Cliente</th>
+									<th class="col-sorter" data-sort="0" data-idx="16">Cant</th>
+									<th class="col-sorter" data-sort="0" data-idx="17">Peso</th>
+									<th class="col-sorter" data-sort="0" data-idx="19">Observaciones</th>
+									<th class="col-sorter" data-sort="0" data-idx="20">Referencia</th>
+									<th class="col-sorter" data-sort="0" data-idx="23">Contacto</th>
+									<th class="col-sorter" data-sort="0" data-idx="24">C.Costo</th>
 								</tr>
 							</thead>
 							<tbody id="main-tbody"></tbody>
@@ -96,7 +122,7 @@
 					</div>
 				</div>
 			</div>
-			<!--nav aria-label="Page navigation example">
+			<nav aria-label="Page navigation example">
 				<ul id="pager" class="pagination pagination-sm justify-content-center">
 					<li class="page-item disabled">
 						<a class="page-link" href="#" tabindex="-1">Previous</a>
@@ -110,8 +136,9 @@
 				</ul>
 				<div class="floating-buttons-container">
 					<a id="btn-xls" href="#" class="btn btn-success btn-circle" title="Exportar a XLS"><i class="fa fa-file-excel-o"></i></a>
+					<!--a id="btn-correo" href="#" class="btn btn-danger btn-circle" title="Enviar por correo"><i class="fa fa-envelope-o"></i></a-->
 				</div>
-			</nav-->
+			</nav>
 		</div>
 		@if(strcmp($usuario->tp_cliente,'admin') == 0)
 		<!-- modal - seleccion de oficina -->
@@ -215,7 +242,6 @@
 		<!-- JS -->
 		@include("common.scripts")
 		<script type="text/javascript" src="{{ asset('js/datepicker.min.js') }}"></script>
-		<script type="text/javascript" src="{{ asset('data-tables/datatables.min.js') }}"></script>
 		<script type="text/javascript">
 			var data;
 			//
@@ -308,96 +334,8 @@
 				}
 			}
 			function RenderTable(page) {
-				var tbody = $("<tbody/>");
-				tbody.empty();
-				const ls_data = data.rows;
-				for(var i in ls_data) {
-					const fila = ls_data[i];
-					tbody.append(
-						$("<tr/>").append(
-							/*$("<td/>").append(
-								$("<a/>").addClass("btn btn-primary btn-sm").attr({href:"#",role:"button"}).data("idx",i).data("loaded","0").data("state","hidden").html(i + 1).on("click", toggleRow)
-							)*/
-							$("<td/>").html(parseInt(i) + 1)
-						).append(
-							$("<td/>").html(fila.origen)
-						).append(
-							$("<td/>").html(fila.fechaing)
-						).append(
-							$("<td/>").html(fila.docing)
-						).append(
-							$("<td/>").html(fila.remito)
-						).append(
-							$("<td/>").html(fila.servicio)
-						).append(
-							$("<td/>").html(fila.contenido)
-						).append(
-							$("<td/>").html(fila.cliente)
-						).append(
-							$("<td/>").html(fila.canenvios)
-						).append(
-							$("<td/>").html(fila.peso)
-						).append(
-							$("<td/>").html(fila.TxtObserv)
-						).append(
-							$("<td/>").html(fila.refcli)
-						).append(
-							$("<td/>").html(fila.nomcontacto)
-						).append(
-							$("<td/>").html(fila.nomccosto)
-						)
-					)/*.append(
-						$("<tr/>").addClass("tr-detalle")
-					).append(
-						$("<tr/>").addClass("tr-detalle").append(
-							$("<td/>")
-						).append(
-							$("<td/>").attr("colspan",17).append(
-								$("<div/>").addClass("dv-loader").append(
-									$("<img/>").attr("src","{{ asset('images/icons/loader.svg') }}")
-								).append(
-									$("<p/>").html("Cargando datos...")
-								)
-							)
-						)
-					)*/;
-				}
-				const tabla = $("<table/>").attr("id", "main-table").append(
-					$("<thead/>").append(
-						$("<tr/>").append(
-							$("<th/>").html("#")
-						).append(
-							$("<th/>").html("Origen")
-						).append(
-							$("<th/>").html("FechaIng")
-						).append(
-							$("<th/>").html("Docing")
-						).append(
-							$("<th/>").html("Remito")
-						).append(
-							$("<th/>").html("Servicio")
-						).append(
-							$("<th/>").html("Contenido")
-						).append(
-							$("<th/>").html("Cliente")
-						).append(
-							$("<th/>").html("Cant")
-						).append(
-							$("<th/>").html("Peso")
-						).append(
-							$("<th/>").html("Observaciones")
-						).append(
-							$("<th/>").html("Referencia")
-						).append(
-							$("<th/>").html("Contacto")
-						).append(
-							$("<th/>").html("C.Costo")
-						)
-					)
-				).append(tbody).addClass("display");
-				$("#table-container").empty().append(tabla);
-				$("#main-table").DataTable();
-				/*var end = page * data.rowsPerPage;
+				var tbody = $("#main-tbody");
+				var end = page * data.rowsPerPage;
 				var start = end - data.rowsPerPage;
 				if(end > data.records) end = data.records;
 				tbody.empty();
@@ -406,7 +344,7 @@
 					tbody.append(
 						$("<tr/>").append(
 							$("<td/>").append(
-								$("<a/>").addClass("btn btn-primary btn-sm").attr({href:"#",role:"button"}).data("idx",i).data("loaded","0").data("state","hidden").html(i + 1).on("click", toggleRow)
+								$("<a/>").addClass("btn btn-primary btn-sm").attr({href:"#",role:"button"}).data("idx",i).data("loaded","0").data("state","hidden").html(fila.pos).on("click", toggleRow)
 							)
 						).append(
 							$("<td/>").html(fila.origen)
@@ -479,7 +417,7 @@
 					$("#pager-last").removeClass("disabled");
 					$("#pager-next").removeClass("disabled");
 				}
-				data.currentPage = page;*/
+				data.currentPage = page;
 			}
 			function BuildPager(pages) {
 				var pager = $("#pager");
@@ -595,7 +533,55 @@
 					else alert(response.message);
 				}, "json");
 			});
+			//nuevos
+			function OrdenarAscendente(posicion) {
+				const tam = data.rows.length;
+				for(var i = 0; i < tam -1; i++) {
+					for(var j = i; j < tam; j++) {
+						if(data.rows[j][Object.keys(data.rows[j])[posicion]] < data.rows[i][Object.keys(data.rows[i])[posicion]]) {
+							var aux = data.rows[j];
+							data.rows[j] = data.rows[i];
+							data.rows[i] = aux;
+						}
+					}
+				}
+				RenderTable(1);
+			}
+			function OrdenarDescendente(posicion) {
+				const tam = data.rows.length;
+				for(var i = 0; i < tam -1; i++) {
+					for(var j = i; j < tam; j++) {
+						if(data.rows[j][Object.keys(data.rows[j])[posicion]] > data.rows[i][Object.keys(data.rows[i])[posicion]]) {
+							var aux = data.rows[j];
+							data.rows[j] = data.rows[i];
+							data.rows[i] = aux;
+						}
+					}
+				}
+				RenderTable(1);
+			}
+			$(".col-sorter").on("click", function() {
+				const th = $(this);
+				const orden = th.data("sort");
+				const posicion = th.data("idx");
+				$(".col-sorter").data("sort",0).removeClass("col-sorted-asc").removeClass("col-sorted-desc");
+				if(orden == 0 || orden == -1) {
+					th.addClass("col-sorted-asc");
+					OrdenarAscendente(posicion);
+					th.data("sort", 1);
+				}
+				else {
+					th.addClass("col-sorted-desc");
+					OrdenarDescendente(posicion);
+					th.data("sort", -1);
+				}
+			});
+			//$(".multiselect").multiselect();
+			//
+			$("#fdesde").val("01/12/2017");
+			$("#fhasta").val("31/12/2017");
 		</script>
+		<script type="text/javascript" src="{{ asset('js/bootstrap-select.js') }}"></script>
 		@include("common.js-oficinas")
 		@include("common.js-ccostos")
 		@include("common.js-productos")

@@ -3,6 +3,7 @@
 	<head>
 		<title>Indicadores | Distribución | Entregas</title>
 		@include("common.styles")
+		<link rel="stylesheet" type="text/css" href="{{ asset('css/bootstrap-select.css') }}">
 		<style type="text/css">
 			#chart-container{display:none}
 			.div-chart{height:400px;width:100%}
@@ -17,23 +18,39 @@
 				<div class="col">
 					<div class="form-container alert alert-secondary" role="alert">
 						<form id="form-filtro" method="post" class="form-inline">
-							<label class="form-control-sm" for="ciclo">
+							<label class="form-control-sm" for="trg-ciclo">
 								Ciclo&nbsp;
-								<input type="text" id="trg-ciclo" class="form-control form-control-sm" placeholder="Seleccione" style="width:12em;">
+								<!--input type="text" id="trg-ciclo" class="form-control form-control-sm" placeholder="Seleccione" style="width:12em;"-->
+								<select id="trg-ciclo" class="selectpicker" multiple data-live-search="true">
+									<option value="0">Todos</option>
+									@foreach($ciclos as $idx => $ciclo)
+									<option value="{{ $ciclo->ciclo }}">{{ $ciclo->ciclo }}</option>
+									@endforeach
+								</select>
 							</label>
 							<!-- -->
 							@if(strcmp($usuario->tp_cliente,'admin') == 0)
-							<label class="form-control-sm" for="oficina">
+							<label class="form-control-sm" for="trg-oficina">
 								Oficina&nbsp;
-								<input type="text" id="trg-oficina" class="form-control form-control-sm" placeholder="Seleccione" style="width:12em;">
+								<!--input type="text" id="trg-oficina" class="form-control form-control-sm" placeholder="Seleccione" style="width:12em;"-->
+								<select id="trg-oficina" class="selectpicker" multiple data-live-search="true">
+									@foreach($ofcs as $idx => $oficina)
+									<option value="{{ $oficina->codigo }}">{{ $oficina->descripcion }}</option>
+									@endforeach
+								</select>
 							</label>
 							@else
 							<input type="hidden" id="oficina" class="ch-of" value="{{ $ofcs[0]->codigo }}">
 							@endif
 							<!-- -->
-							<label class="form-control-sm" for="producto">
+							<label class="form-control-sm" for="trg-producto">
 								Producto&nbsp;
-								<input type="text" id="trg-producto" class="form-control form-control-sm" placeholder="Seleccione" style="width:12em;">
+								<!--input type="text" id="trg-producto" class="form-control form-control-sm" placeholder="Seleccione" style="width:12em;"-->
+								<select id="trg-producto" class="selectpicker" multiple data-live-search="true">
+									@foreach($prds as $idx => $producto)
+									<option value="{{ $producto->codigo }}">{{ $producto->descripcion }}</option>
+									@endforeach
+								</select>
 							</label>
 							<!-- -->
 							<div class="form-check-inline">
@@ -222,15 +239,58 @@
 				</div>
 			</div>
 		</div>
+	    <!--End-->
+	    <div class="modal fade" id="modal-info" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	        <div class="modal-dialog" role="document">
+	            <div class="modal-content">
+	                <div class="modal-header">
+	                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	                    <h4 class="modal-title" id="modal-info-label">Mostrando detalles</h4>
+	                </div>
+	                <div class="modal-body">
+	                    <div class="row">
+	                        <div class="col-lg-8 col-lg-offset-2" id="modal-info-container">
+	                            <p>Cargando datos. Por favor, espere...</p>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="modal-footer">
+	                    <button type="button" class="btn btn-search" data-dismiss="modal">Cerrar</button>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	    <!-- -->
+	    <div class="modal fade" id="modal-extra" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	        <div class="modal-dialog" role="document">
+	            <div class="modal-content">
+	                <div class="modal-header">
+	                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+	                    <h4 class="modal-title" id="modal-extra-label">Mostrando detalles</h4>
+	                </div>
+	                <div class="modal-body">
+	                    <div class="row">
+	                        <div class="col-lg-12">
+	                            <input type="hidden" id="me-dia">
+	                            <input type="hidden" id="me-estado">
+	                            <div id="modal-extra-container">
+	                                <p>Cargando datos. Por favor, espere...</p>
+	                            </div>
+	                        </div>
+	                    </div>
+	                </div>
+	                <div class="modal-footer">
+	                    <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
 		<!-- JS -->
 		@include("common.scripts")
-		@include("common.js-ciclos")
-		@include("common.js-oficinas")
-		@include("common.js-productos")
 		<script type="text/javascript" src="{{ asset('js/highcharts.js') }}"></script>
 		<script type="text/javascript" src="{{ asset('js/modules/drilldown.js') }}"></script>
 		<script type="text/javascript">
-			var data, data1, data2, data3;
+			var data, data1, data2, data3, arr_ciclos = [], arr_ofcs = [], arr_prds = [];
 			//
 			$("#btn-form").on("click", function(e) {
 				$("#chart-container").fadeOut(150);
@@ -338,7 +398,8 @@
 						            allowPointSelect: true,
 						            cursor: 'pointer',
 						            dataLabels: { enabled: false },
-						            showInLegend: true
+						            showInLegend: true,
+						            events: { click: MuestraDetalleG1 }
 						        }
 						    },
 						    tooltip: {
@@ -416,7 +477,73 @@
 						    plotOptions: {
 						        column: {
 						            stacking: 'normal'
-						        }
+						        },
+						        series: {
+			                        events: {
+			                            click: function(event) {
+			                                var p = {
+			                                    _token: "{{ csrf_token() }}",
+			                                    ccl: $("#adCiclo").val(),
+			                                    grn: $("#adGerencia").val(),
+			                                    str: $("#adSector").val(),
+			                                    cno: $("#adCNO").val(),
+			                                    dia: event.point.category,
+			                                    est: event.point.series.name
+			                                };
+			                                $("#modal-extra").modal("show");
+			                                $("#modal-extra-container").empty().append(
+			                                    $("<p/>").html("Cargando datos. Por favor, espere...")
+			                                );
+			                                $("#me-dia").val(p.dia);
+			                                $("#me-estado").val(p.est);
+			                                $.post("{{ url('indicadores/ajax/if-entrega-g2') }}", p, function(response) {
+			                                    if(response.success) {
+			                                        var arr_pie = [];
+			                                        var fdata = response.data;
+			                                        for(var i in fdata) {
+			                                            var idata = fdata[i];
+			                                            arr_pie.push({name:idata.motivo,y:parseInt(idata.cant)});
+			                                        }
+			                                        $("#modal-extra-container").empty().highcharts({
+			                                            chart: {
+			                                                plotBackgroundColor: null,
+			                                                plotBorderWidth: 1,//null,
+			                                                plotShadow: false
+			                                            },
+			                                            title: {
+			                                                text: "Detalle del día " + p.dia
+			                                            },
+			                                            tooltip: {
+			                                                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+			                                            },
+			                                            plotOptions: {
+			                                                pie: {
+			                                                    allowPointSelect: true,
+			                                                    cursor: 'pointer',
+			                                                    dataLabels: {
+			                                                        enabled: true,
+			                                                        format: '<b>{point.name}</b>: {point.y} ({point.percentage:.2f} %)',
+			                                                        style: {
+			                                                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+			                                                        }
+			                                                    },
+			                                                    events: {
+			                                                        click: MuestraDetalleG2
+			                                                    }
+			                                                }
+			                                            },
+			                                            series: [{
+			                                                type: 'pie',
+			                                                name: 'Porcentaje',
+			                                                data: arr_pie
+			                                            }]
+			                                        });
+			                                    }
+			                                    else alert(response.message);
+			                                }, "json");
+			                            }
+			                        }
+			                    }
 						    },
 						    series: ds2
 						});
@@ -477,6 +604,161 @@
 					$("#btn-form").show();
 				});
 			});
+			//
+			$("#trg-ciclo").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
+				var select = $(this);
+				arr_ciclos = $(this).val();
+				if(clickedIndex == 0) {
+					if(isSelected) {
+						select.selectpicker("selectAll");
+						arr_ciclos = ["Todos"];
+					}
+					else select.selectpicker("deselectAll");
+				}
+				console.log(arr_ciclos);
+			});
+			$("#trg-oficina").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
+				var select = $(this);
+				arr_ofcs = $(this).val();
+				if(clickedIndex == 0) {
+					if(isSelected) {
+						select.selectpicker("selectAll");
+						arr_ofcs = ["Todos"];
+					}
+					else select.selectpicker("deselectAll");
+				}
+				console.log(arr_ofcs);
+			});
+			$("#trg-producto").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
+				var select = $(this);
+				arr_prds = $(this).val();
+				if(clickedIndex == 0) {
+					if(isSelected) {
+						select.selectpicker("selectAll");
+						arr_prds = ["Todos"];
+					}
+					else select.selectpicker("deselectAll");
+				}
+				console.log(arr_prds);
+			});
+			//
+	        MuestraDetalleG1 = (event) => {
+	            if(event.point.series.name != 'Motivos') {
+	                $("#modal-export-container").empty().append(
+	                    $("<p/>").html("Cargando datos. Por favor, espere...")
+	                );
+	                $("#modal-export").modal("show");
+	                var p = {
+	                    _token: "{{ csrf_token() }}",
+	                    ccl: $("#trg-ciclo").val(),
+	                    grn: $("#adGerencia").val(),
+	                    str: $("#adSector").val(),
+	                    cno: $("#adCNO").val(),
+	                    estado: event.point.name
+	                };
+	                $.post("{{ url('indicadores/ajax/if-detalle-g1') }}", p, (response) => {
+	                    if(response.success) {
+	                        var tbody = $("<tbody/>");
+	                        ls_export = response.data;
+	                        ls_header = ["Motivo", "Código", "Consultora", "Ciclo", "Situación"];
+	                        for(var i in ls_export) {
+	                            tbody.append(
+	                                $("<tr/>").append(
+	                                    $("<td/>").html(parseInt(i) + 1)
+	                                ).append(
+	                                    $("<td/>").html(ls_export[i].motivo)
+	                                ).append(
+	                                    $("<td/>").html(ls_export[i].codcn)
+	                                ).append(
+	                                    $("<td/>").html(ls_export[i].consult)
+	                                ).append(
+	                                    $("<td/>").html(ls_export[i].ciclo)
+	                                ).append(
+	                                    $("<td/>").html(ls_export[i].situacion)
+	                                )
+	                            );
+	                        }
+	                        var table = $("<table/>").append(
+	                            $("<thead/>").append(
+	                                $("<tr/>").append(
+	                                    $("<th/>").html("")
+	                                ).append(
+	                                    $("<th/>").html("Motivo")
+	                                ).append(
+	                                    $("<th/>").html("Código")
+	                                ).append(
+	                                    $("<th/>").html("Consultora")
+	                                ).append(
+	                                    $("<th/>").html("Ciclo")
+	                                ).append(
+	                                    $("<th/>").html("Situación")
+	                                )
+	                            )
+	                        ).append(tbody).addClass("table table-striped");
+	                        $("#modal-export-container").empty().append(table);
+	                    }
+	                }, "json");
+	            }
+	        }
+	        MuestraDetalleG2 = (event) => {
+	            $("#modal-export-container").empty().append(
+	                $("<p/>").html("Cargando datos. Por favor, espere...")
+	            );
+	            $("#modal-export").modal("show");
+	            var p = {
+	                _token: "{{ csrf_token() }}",
+	                ccl: $("#adCiclo").val(),
+	                grn: $("#adGerencia").val(),
+	                str: $("#adSector").val(),
+	                cno: $("#adCNO").val(),
+	                dia: $("#me-dia").val(),
+	                est: $("#me-estado").val(),
+	                motivo: event.point.name
+	            };
+	            $.post("{{ url('ajax/indicadores/if-detalle-g2') }}", p, (response) => {
+	                if(response.success) {
+	                    var tbody = $("<tbody/>");
+	                    ls_export = response.data;
+	                    ls_header = ["Motivo", "Código", "Consultora", "Ciclo", "Situación"];
+	                    for(var i in ls_export) {
+	                        tbody.append(
+	                            $("<tr/>").append(
+	                                $("<td/>").html(parseInt(i) + 1)
+	                            ).append(
+	                                $("<td/>").html(ls_export[i].motivo)
+	                            ).append(
+	                                $("<td/>").html(ls_export[i].codcn)
+	                            ).append(
+	                                $("<td/>").html(ls_export[i].consult)
+	                            ).append(
+	                                $("<td/>").html(ls_export[i].ciclo)
+	                            ).append(
+	                                $("<td/>").html(ls_export[i].situacion)
+	                            )
+	                        );
+	                    }
+	                    var table = $("<table/>").append(
+	                        $("<thead/>").append(
+	                            $("<tr/>").append(
+	                                $("<th/>").html("")
+	                            ).append(
+	                                $("<th/>").html("Motivo")
+	                            ).append(
+	                                $("<th/>").html("Código")
+	                            ).append(
+	                                $("<th/>").html("Consultora")
+	                            ).append(
+	                                $("<th/>").html("Ciclo")
+	                            ).append(
+	                                $("<th/>").html("Situación")
+	                            )
+	                        )
+	                    ).append(tbody).addClass("table table-striped");
+	                    $("#modal-export-container").empty().append(table);
+	                }
+	            }, "json");
+	        }
 		</script>
+		<script type="text/javascript" src="{{ asset('js/bootstrap-select.js') }}"></script>
 	</body>
 </html>

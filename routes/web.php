@@ -45,6 +45,9 @@ Route::group(["namespace" => "Web"], function() {
 		Route::get("d-entregas", "Intranet@ind_dis_entregas");
 		Route::prefix("ajax")->group(function() {
 			Route::post("buscar", "Indicadores@ebuscar");
+			Route::post("if-entrega-g1", "Indicadores@if_entrega_g1");
+			Route::post("if-entrega-g2", "Indicadores@if_entrega_g2");
+			Route::post("if-entrega-g3", "Indicadores@if_entrega_g3");
 		});
 	});
 	//usuarios

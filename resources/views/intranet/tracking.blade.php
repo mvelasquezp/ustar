@@ -6,6 +6,7 @@
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/datepicker.min.css') }}">
 		<style type="text/css">
 			.table-responsive{max-height:1000px !important;}
+			.map-canvas{height:480px;width:640px;}
 		</style>
 	</head>
 	<body>
@@ -119,6 +120,7 @@
 		<!-- JS -->
 		@include("common.scripts")
 		<script type="text/javascript" src="{{ asset('js/datepicker.min.js') }}"></script>
+    	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKznc28sCbcKDuJh2AHpFohCItP5YIwKk" async defer></script>
 		<script type="text/javascript">
 			var data;
 			$(".datepicker").datepicker({
@@ -152,6 +154,7 @@
 						if(response.state == "success") {
 							var rows = response.data.rows;
 							var imgs = response.data.imgs;
+                        	var ipunto = { lat:0, lon:0 };
 							//arma la tabla detalle
 							var tbody = $("<tbody/>");
 							for(var i in rows) {
@@ -165,6 +168,10 @@
 										$("<td/>").html(row.observ)
 									)
 								);
+								if(row.latitud && row.longitud) {
+									ipunto.lat = row.latitud;
+									ipunto.lon = row.longitud;
+								}
 							}
 							var table = $("<table/>").addClass("table table-striped table-sm").append(
 								$("<thead/>").addClass("bg-success text-light").append(
@@ -263,6 +270,17 @@
 											"aria-selected": true
 										}).html("Imagenes")
 									)
+								).append(
+									$("<li/>").addClass("nav-item").append(
+										$("<a/>").addClass("nav-link").attr({
+											"id": "mapa-tab-" + idx,
+											"data-toggle": "tab",
+											"href": "#mapa-" + idx,
+											"role": "tab",
+											"aria-controls": "#mapa-" + idx,
+											"aria-selected": true
+										}).html("Mapa")
+									)
 								)
 							).append(
 								$("<div/>").addClass("tab-content").append(
@@ -283,8 +301,26 @@
 									}).append(
 										$("<div/>").addClass("col-sm-12 col-md-8 col-lg-6").append(carrusel)
 									)
+								).append(
+									$("<div/>").addClass("tab-pane fade").attr({
+										"id": "mapa-" + idx,
+										"role": "tabpanel",
+										"aria-labelledby": "mapa-tab-" + idx
+									}).append(
+										$("<div/>").addClass("col-sm-12 col-md-8 col-lg-6").append(
+											$("<div/>").attr("id", "map-canvas-" + idx)
+										)
+									)
 								)
 							);
+							if(ipunto.lat != 0 && ipunto.lon != 0) {
+								DibujarMapa("map-canvas-" + idx, ipunto);
+							}
+							else {
+								$("#map-canvas-" + idx).append(
+									$("<p/>").addClass("text-danger mb-2").html("No hay información geográfica del tracking")
+								)
+							}
 						}
 						else {
 							alert(response.message);
@@ -505,6 +541,19 @@
 					else alert(response.message);
 				}, "json");
 			});
+			//
+	        DibujarMapa = (div, coords) => {
+	            $("#" + div).addClass("map-canvas").empty();
+	            var map = new google.maps.Map(document.getElementById(div), {
+	                center: {lat: coords.lat, lng: coords.lon},
+	                zoom: 18
+	            });
+	            var marker = new google.maps.Marker({
+	                position: {lat:coords.lat, lng:coords.lon},
+	                map: map,
+	                title: "Punto de entrega"
+	            });
+	        }
 		</script>
 	</body>
 </html>

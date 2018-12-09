@@ -30,11 +30,9 @@
 							<label class="form-control-sm" for="oficina">
 								Oficina&nbsp;
 								<!--input type="text" id="trg-oficina" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;"-->
-								<select class="selectpicker" multiple data-live-search="true">
+								<select id="trg-oficina" class="selectpicker" multiple data-live-search="true">
 									@foreach($ofcs as $idx => $oficina)
-									@if($idx != 0)
 									<option value="{{ $oficina->codigo }}">{{ $oficina->descripcion }}</option>
-									@endif
 									@endforeach
 								</select>
 							</label>
@@ -42,11 +40,9 @@
 							<label class="form-control-sm" for="ccosto">
 								C. Costo&nbsp;
 								<!--input type="text" id="trg-ccosto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;"-->
-								<select class="selectpicker" multiple data-live-search="true">
+								<select id="trg-ccosto" class="selectpicker" multiple data-live-search="true">
 									@foreach($ccts as $idx => $ccosto)
-									@if($idx != 0)
 									<option value="{{ $ccosto->codigo }}">{{ $ccosto->descripcion }}</option>
-									@endif
 									@endforeach
 								</select>
 							</label>
@@ -58,11 +54,9 @@
 							<label class="form-control-sm" for="producto">
 								Producto&nbsp;
 								<!--input type="text" id="trg-producto" class="form-control form-control-sm" placeholder="Seleccione" style="width:7em;"-->
-								<select class="selectpicker" multiple data-live-search="true">
+								<select id="trg-producto" class="selectpicker" multiple data-live-search="true">
 									@foreach($prds as $idx => $producto)
-									@if($idx != 0)
 									<option value="{{ $producto->codigo }}">{{ $producto->descripcion }}</option>
-									@endif
 									@endforeach
 								</select>
 							</label>
@@ -243,7 +237,7 @@
 		@include("common.scripts")
 		<script type="text/javascript" src="{{ asset('js/datepicker.min.js') }}"></script>
 		<script type="text/javascript">
-			var data;
+			var data, arr_ofcs = [0], arr_ccs = [0], arr_prds = [0];
 			//
 			$(".datepicker").datepicker({
 				autoclose: true,
@@ -576,14 +570,43 @@
 					th.data("sort", -1);
 				}
 			});
-			//$(".multiselect").multiselect();
-			//
-			$("#fdesde").val("01/12/2017");
-			$("#fhasta").val("31/12/2017");
+			$("#trg-oficina").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
+				var select = $(this);
+				arr_ofcs = $(this).val();
+				if(clickedIndex == 0) {
+					if(isSelected) {
+						select.selectpicker("selectAll");
+						arr_ofcs = ["Todos"];
+					}
+					else select.selectpicker("deselectAll");
+				}
+				console.log(arr_ofcs);
+			});
+			$("#trg-ccosto").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
+				var select = $(this);
+				arr_ccs = $(this).val();
+				if(clickedIndex == 0) {
+					if(isSelected) {
+						select.selectpicker("selectAll");
+						arr_ccs = ["Todos"];
+					}
+					else select.selectpicker("deselectAll");
+				}
+				console.log(arr_ccs);
+			});
+			$("#trg-producto").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
+				var select = $(this);
+				arr_prds = $(this).val();
+				if(clickedIndex == 0) {
+					if(isSelected) {
+						select.selectpicker("selectAll");
+						arr_prds = ["Todos"];
+					}
+					else select.selectpicker("deselectAll");
+				}
+				console.log(arr_prds);
+			});
 		</script>
 		<script type="text/javascript" src="{{ asset('js/bootstrap-select.js') }}"></script>
-		@include("common.js-oficinas")
-		@include("common.js-ccostos")
-		@include("common.js-productos")
 	</body>
 </html>

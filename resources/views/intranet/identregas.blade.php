@@ -8,6 +8,11 @@
 			#chart-container{display:none}
 			.div-chart{height:400px;width:100%}
 			hr{margin:10px 0}
+	        .tag{border-radius:4px;display:inline-block;height:24px;width:48px}
+	        .tag-rojo{background-color:#e53935}
+	        .tag-amarillo{background-color:#fbc02d}
+	        .tag-verde{background-color:#4caf50}
+	        #modal-extra-container{height:480px;width:100%}
 		</style>
 	</head>
 	<body>
@@ -40,7 +45,7 @@
 								</select>
 							</label>
 							@else
-							<input type="hidden" id="oficina" class="ch-of" value="{{ $ofcs[0]->codigo }}">
+							<input type="hidden" id="trg-oficina" class="ch-of" value="{{ $ofcs[0]->codigo }}">
 							@endif
 							<!-- -->
 							<label class="form-control-sm" for="trg-producto">
@@ -51,6 +56,11 @@
 									<option value="{{ $producto->codigo }}">{{ $producto->descripcion }}</option>
 									@endforeach
 								</select>
+							</label>
+							<!-- -->
+							<label class="form-control-sm" for="nrdoc">
+								Documento
+								<input type="text" id="nrdoc" class="form-control form-control-sm ml-2" placeholder="Seleccione" style="width:6em;">
 							</label>
 							<!-- -->
 							<div class="form-check-inline">
@@ -146,6 +156,40 @@
 					<div id="chart-3" style="height:960px"></div>
 				</div>
 			</div>
+			<container id="map-container" style="width:100%">
+		        <div class="row mt-2">
+		            <div class="col-xs-8 col-xs-offset-2">
+		                <h4 class="text-dark">Entregas por distrito</h4><br>
+		            </div>
+		        </div>
+				<div class="row">
+					<div class="col-4">
+						<p>Elija un distrito del mapa para ver el detalle</p>
+	                    <h3 class="text-warning">Leyenda</h3>
+	                    <table class="table">
+	                        <tbody>
+	                            <tr>
+	                                <td>Efectividad de entrega &gt;= 98%</td>
+	                                <td><span class="tag tag-verde"></span></td>
+	                            </tr>
+	                            <tr>
+	                                <td>96% &lt;= Efectividad de entrega &lt; 98%</td>
+	                                <td><span class="tag tag-amarillo"></span></td>
+	                            </tr>
+	                            <tr>
+	                                <td>Efectividad de entrega &lt; 96%</td>
+	                                <td><span class="tag tag-rojo"></span></td>
+	                            </tr>
+	                        </tbody>
+	                    </table>
+					</div>
+					<div class="col-8">
+						<div id="map-container" style="width:100%;height:640px">
+							<div id="map-canvas" style="width:100%;height:640px"></div>
+						</div>
+					</div>
+				</div>
+			</container>
 		</div>
 		<!-- loader de búsqueda -->
 		<div id="loader-busqueda">
@@ -243,10 +287,12 @@
 	    <div class="modal fade" id="modal-info" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 	        <div class="modal-dialog" role="document">
 	            <div class="modal-content">
-	                <div class="modal-header">
-	                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-	                    <h4 class="modal-title" id="modal-info-label">Mostrando detalles</h4>
-	                </div>
+					<div class="modal-header">
+						<h5 class="modal-title text-primary" id="modal-info-label">Mostrando detalles</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
 	                <div class="modal-body">
 	                    <div class="row">
 	                        <div class="col-lg-8 col-lg-offset-2" id="modal-info-container">
@@ -289,12 +335,25 @@
 		@include("common.scripts")
 		<script type="text/javascript" src="{{ asset('js/highcharts.js') }}"></script>
 		<script type="text/javascript" src="{{ asset('js/modules/drilldown.js') }}"></script>
+    	<script src="{{ asset('js/distritos.js') }}"></script>
 		<script type="text/javascript">
-			var data, data1, data2, data3, arr_ciclos = [], arr_ofcs = [], arr_prds = [];
+			var data, data1, data2, data3, arr_ciclos = ["Todos"], arr_ofcs = ["Todos"], arr_prds = ["Todos"], arr_distritos, polygons = [];
+	        var styledMapType, map;
+	        var settings = {
+	            colors: {
+	                red:"#e53935",
+	                yellow:"#fbc02d",
+	                green:"#4caf50"
+	            },
+	            stroke: 0.8,
+	            fill: 0.4,
+	            weight: 1
+	        };
 			//
 			$("#btn-form").on("click", function(e) {
 				$("#chart-container").fadeOut(150);
 				e.preventDefault();
+				remove_polygons();
 				$("#loader-busqueda").fadeIn(150);
 				var p = {
 					_token: "{{ csrf_token() }}",
@@ -303,7 +362,8 @@
 					prd: arr_prds,
 					loc: document.getElementById("tplocal").checked ? 'S' : 'N',
 					nac: document.getElementById("tpnacional").checked ? 'S' : 'N',
-					int: document.getElementById("tpinternacional").checked ? 'S' : 'N'
+					int: document.getElementById("tpinternacional").checked ? 'S' : 'N',
+					doc: document.getElementById("nrdoc").value
 				};
 				$("#btn-form").hide();
 				$.post("{{ url('indicadores/ajax/buscar') }}", p, function(response) {
@@ -312,6 +372,8 @@
 						data1 = response.data.data1;
 						data2 = response.data.data2;
 						data3 = response.data.data3;
+						//mapas
+	                    arr_distritos = response.data.datamap;
 						//colores
 						var colors = ["#4caf50","#1976d2","#ff9800","#d32f2f","#00bcd4","#fdd835","#512da8","#8bc34a","#607d8b","#ffc107","#3f51b5","#cddc39","#ff5722","#6a1b9a","#039be5","#009688","#795548","#c2185b","#9e9e9e"];
 						//dias visita
@@ -394,17 +456,22 @@
 						    title: { text: 'Efectividad de entregas' },
 						    subtitle: { text: 'Click en el gráfico para mostrar detalles.' },
 						    plotOptions: {
+			                    series: {
+			                        dataLabels: {
+			                            enabled: true,
+			                            format: '{point.name}: {point.y} [{point.percentage:.2f}%]'
+			                        }
+			                    },
 						    	pie: {
 						            allowPointSelect: true,
 						            cursor: 'pointer',
 						            dataLabels: { enabled: false },
-						            showInLegend: true,
-						            events: { click: MuestraDetalleG1 }
+						            showInLegend: true
 						        }
 						    },
 						    tooltip: {
 						        headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
-						        pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.0f}</b> unds.<br/>'
+						        pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y} [{point.percentage:.2f}%]</b> del total<br/>'
 						    },
 						    series: [{
 						        name: 'Estados',
@@ -471,8 +538,12 @@
 						        shadow: false
 						    },
 						    tooltip: {
-						        headerFormat: '<b>Día visita: {point.x}</b><br/>',
-						        pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+						        headerFormat: '<span style="font-size:10px">{point.x}</span><table>',
+			                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+			                        '<td style="padding:0"><b>{point.y} unids</b> [{point.percentage:.2f}%]</td></tr>',
+			                    footerFormat: '</table>',
+			                    shared: true,
+			                    useHTML: true
 						    },
 						    plotOptions: {
 						        column: {
@@ -526,9 +597,6 @@
 			                                                        style: {
 			                                                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
 			                                                        }
-			                                                    },
-			                                                    events: {
-			                                                        click: MuestraDetalleG2
 			                                                    }
 			                                                }
 			                                            },
@@ -586,6 +654,14 @@
 						Highcharts.chart("chart-3", {
 						    chart: { type: 'bar' },
 						    title: { text: 'Entregas por estado y ciudad' },
+			                tooltip: {
+			                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+			                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+			                        '<td style="padding:0"><b>{point.y} unids</b> [{point.percentage:.2f}%]</td></tr>',
+			                    footerFormat: '</table>',
+			                    shared: true,
+			                    useHTML: true
+			                },
 						    xAxis: { categories: ciudades },
 						    yAxis: {
 						        min: 0,
@@ -595,6 +671,97 @@
 						    plotOptions: { series: { stacking: 'normal' } },
 						    series: ds3
 						});
+						//dibujar el mapa
+						if(p.loc == "S") {
+							var idx = 0;
+				            for(var i in arr_distritos) {
+				                var idistrito = arr_distritos[i];
+				                if(idistrito.puntos.length > 0) {
+				                    var shapeColor = settings.colors.green;
+				                    if(idistrito.perc < 98) shapeColor = settings.colors.yellow;
+				                    if(idistrito.perc < 96) shapeColor = settings.colors.red;
+				                    var shape = new google.maps.Polygon({
+				                        paths: idistrito.puntos,
+				                        strokeColor: shapeColor,
+				                        strokeOpacity: settings.stroke,
+				                        strokeWeight: settings.weight,
+				                        fillColor: shapeColor,
+				                        fillOpacity: settings.fill,
+				                        distrito: {codigo:idistrito.codigo,nombre:idistrito.nombre}
+				                    });
+				                    polygons[idx] = shape;
+				                    polygons[idx].setMap(map);
+				                    //inserta listener para los poligonos
+				                    polygons[idx].addListener("click", function(event) {
+				                        var punto = $(this)[0];
+				                        var distrito = punto.distrito;
+				                        var p = {
+				                            _token: "{{ csrf_token() }}",
+				                            ccl: $("#adCiclo").val(),
+				                            grn: $("#adGerencia").val(),
+				                            str: $("#adSector").val(),
+				                            cno: $("#adCNO").val(),
+				                            dst: distrito.codigo
+				                        };
+				                        $("#modal-info-container").empty().append(
+				                            $("<p/>").html("Cargando datos. Por favor, espere...")
+				                        );
+				                        $("#modal-info-label").html("Distrito de " + distrito.nombre.toUpperCase());
+				                        $("#modal-info").modal("show");
+				                        $.post("{{ url('indicadores/ajax/if-entrega-distrito') }}", p, function(response) {
+				                            if(response.success) {
+				                                var tbody = $("<tbody/>");
+				                                var data = response.data;
+				                                for(var i in data) {
+				                                    var restado = data[i];
+				                                    tbody.append(
+				                                        $("<tr/>").addClass("active").append(
+				                                            $("<td/>").attr("colspan",2).html(restado.estado)
+				                                        ).append(
+				                                            $("<td/>").addClass("text-right").html(restado.cantidad)
+				                                        ).append(
+				                                            $("<td/>").addClass("text-right").html((100 * restado.cantidad / response.todo).toFixed(2) + "%")
+				                                        )
+				                                    );
+				                                    var motivos = restado.motivos;
+				                                    for(var j in motivos) {
+				                                        var rmotivo = motivos[j];
+				                                        tbody.append(
+				                                            $("<tr/>").append(
+				                                                $("<td/>").attr("width","10%").html("")
+				                                            ).append(
+				                                                $("<td/>").attr("width","50%").html(rmotivo.motivo)
+				                                            ).append(
+				                                                $("<td/>").addClass("text-right").html(rmotivo.cantidad)
+				                                            ).append(
+				                                                $("<td/>").addClass("text-right").html((100 * rmotivo.cantidad / restado.cantidad).toFixed(2) + "%")
+				                                            )
+				                                        );
+				                                    }
+				                                }
+				                                $("#modal-info-container").empty().append(
+				                                    $("<table/>").addClass("table").append(
+				                                        $("<thead/>").append(
+				                                            $("<tr/>").append(
+				                                                $("<th/>").attr("colspan",2).html("Estado")
+				                                            ).append(
+				                                                $("<th/>").attr("width","20%").html("Cantidad")
+				                                            ).append(
+				                                                $("<th/>").attr("width","20%").html("Porcentaje")
+				                                            )
+				                                        )
+				                                    ).append(tbody)
+				                                );
+				                            }
+				                        }, "json");
+				                    });
+				                }
+				                idx++;
+				            }
+				            //console.log("show #map-container");
+				            $("#map-container").show();
+						}
+						else $("#map-container").hide();
 					}
 					else alert(response.msg);
 					$("#loader-busqueda").fadeOut(150);
@@ -605,6 +772,37 @@
 				});
 			});
 			//
+	        function remove_polygons() {
+	        	if(polygons) {
+	        		var tam = polygons.length;
+		            for(var i in polygons) {
+		                polygons[i].setMap(null);
+		            }
+		            polygons = [];
+	        	}
+	        }
+	        function initMap() {
+	            styledMapType = new google.maps.StyledMapType([
+	                {"featureType": "administrative","elementType": "geometry","stylers": [{"visibility": "off"}]},
+	                {"featureType": "administrative.land_parcel","stylers": [{"visibility": "off"}]},
+	                {"featureType": "administrative.neighborhood","stylers": [{"visibility": "off"}]},
+	                {"featureType": "poi","stylers": [{"visibility": "off"}]},
+	                {"featureType": "road","stylers": [{"visibility": "off"}]},
+	                {"featureType": "road","elementType": "labels","stylers": [{"visibility": "off"}]},
+	                {"featureType": "road","elementType": "labels.icon","stylers": [{"visibility": "off"}]},
+	                {"featureType": "transit","stylers": [{"visibility": "off"}]},
+	                {"featureType": "water","elementType": "labels.text","stylers": [{"visibility": "off"}]}
+	            ]);
+	            map = new google.maps.Map(document.getElementById("map-canvas"), {
+	                center: {lat: -12.091967, lng: -77.027396},
+	                zoom: 12,
+	                mapTypeControlOptions: {
+	                    mapTypeIds: ["roadmap", "satellite", "hybrid", "terrain", "styled_map"]
+	                }
+	            });
+	            map.mapTypes.set("styled_map", styledMapType);
+	            map.setMapTypeId("styled_map");
+	        }
 			$("#trg-ciclo").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
 				var select = $(this);
 				arr_ciclos = $(this).val();
@@ -641,124 +839,9 @@
 				}
 				console.log(arr_prds);
 			});
-			//
-	        MuestraDetalleG1 = (event) => {
-	            if(event.point.series.name != 'Motivos') {
-	                $("#modal-export-container").empty().append(
-	                    $("<p/>").html("Cargando datos. Por favor, espere...")
-	                );
-	                $("#modal-export").modal("show");
-	                var p = {
-	                    _token: "{{ csrf_token() }}",
-	                    ccl: $("#trg-ciclo").val(),
-	                    grn: $("#adGerencia").val(),
-	                    str: $("#adSector").val(),
-	                    cno: $("#adCNO").val(),
-	                    estado: event.point.name
-	                };
-	                $.post("{{ url('indicadores/ajax/if-detalle-g1') }}", p, (response) => {
-	                    if(response.success) {
-	                        var tbody = $("<tbody/>");
-	                        ls_export = response.data;
-	                        ls_header = ["Motivo", "Código", "Consultora", "Ciclo", "Situación"];
-	                        for(var i in ls_export) {
-	                            tbody.append(
-	                                $("<tr/>").append(
-	                                    $("<td/>").html(parseInt(i) + 1)
-	                                ).append(
-	                                    $("<td/>").html(ls_export[i].motivo)
-	                                ).append(
-	                                    $("<td/>").html(ls_export[i].codcn)
-	                                ).append(
-	                                    $("<td/>").html(ls_export[i].consult)
-	                                ).append(
-	                                    $("<td/>").html(ls_export[i].ciclo)
-	                                ).append(
-	                                    $("<td/>").html(ls_export[i].situacion)
-	                                )
-	                            );
-	                        }
-	                        var table = $("<table/>").append(
-	                            $("<thead/>").append(
-	                                $("<tr/>").append(
-	                                    $("<th/>").html("")
-	                                ).append(
-	                                    $("<th/>").html("Motivo")
-	                                ).append(
-	                                    $("<th/>").html("Código")
-	                                ).append(
-	                                    $("<th/>").html("Consultora")
-	                                ).append(
-	                                    $("<th/>").html("Ciclo")
-	                                ).append(
-	                                    $("<th/>").html("Situación")
-	                                )
-	                            )
-	                        ).append(tbody).addClass("table table-striped");
-	                        $("#modal-export-container").empty().append(table);
-	                    }
-	                }, "json");
-	            }
-	        }
-	        MuestraDetalleG2 = (event) => {
-	            $("#modal-export-container").empty().append(
-	                $("<p/>").html("Cargando datos. Por favor, espere...")
-	            );
-	            $("#modal-export").modal("show");
-	            var p = {
-	                _token: "{{ csrf_token() }}",
-	                ccl: $("#adCiclo").val(),
-	                grn: $("#adGerencia").val(),
-	                str: $("#adSector").val(),
-	                cno: $("#adCNO").val(),
-	                dia: $("#me-dia").val(),
-	                est: $("#me-estado").val(),
-	                motivo: event.point.name
-	            };
-	            $.post("{{ url('ajax/indicadores/if-detalle-g2') }}", p, (response) => {
-	                if(response.success) {
-	                    var tbody = $("<tbody/>");
-	                    ls_export = response.data;
-	                    ls_header = ["Motivo", "Código", "Consultora", "Ciclo", "Situación"];
-	                    for(var i in ls_export) {
-	                        tbody.append(
-	                            $("<tr/>").append(
-	                                $("<td/>").html(parseInt(i) + 1)
-	                            ).append(
-	                                $("<td/>").html(ls_export[i].motivo)
-	                            ).append(
-	                                $("<td/>").html(ls_export[i].codcn)
-	                            ).append(
-	                                $("<td/>").html(ls_export[i].consult)
-	                            ).append(
-	                                $("<td/>").html(ls_export[i].ciclo)
-	                            ).append(
-	                                $("<td/>").html(ls_export[i].situacion)
-	                            )
-	                        );
-	                    }
-	                    var table = $("<table/>").append(
-	                        $("<thead/>").append(
-	                            $("<tr/>").append(
-	                                $("<th/>").html("")
-	                            ).append(
-	                                $("<th/>").html("Motivo")
-	                            ).append(
-	                                $("<th/>").html("Código")
-	                            ).append(
-	                                $("<th/>").html("Consultora")
-	                            ).append(
-	                                $("<th/>").html("Ciclo")
-	                            ).append(
-	                                $("<th/>").html("Situación")
-	                            )
-	                        )
-	                    ).append(tbody).addClass("table table-striped");
-	                    $("#modal-export-container").empty().append(table);
-	                }
-	            }, "json");
-	        }
+			$("#map-container").hide();
 		</script>
 		<script type="text/javascript" src="{{ asset('js/bootstrap-select.js') }}"></script>
+    	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKznc28sCbcKDuJh2AHpFohCItP5YIwKk&callback=initMap" async defer></script>
 	</body>
 </html>

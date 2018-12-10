@@ -52,20 +52,54 @@ class Indicadores extends Controller {
 
     public function ebuscar() {
         $user = Auth::user();
+        ini_set("max_execution_time", 0);
         extract(Request::input());
         if(isset($ccl,$ofc,$prd,$loc,$nac,$int)) {
+            $documento = isset($doc) ? $doc : "Todos";
             $ccl = implode(",", $ccl);
             $prd = implode(",", $prd);
             $ofc = implode(",", $ofc);
-            $data1 = DB::select("call sp_web_grafica_distribu1_list(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
-            $data2 = DB::select("call sp_web_grafica_distribu_list_g2(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
-            $data3 = DB::select("call sp_web_grafica_distribu2_list(?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int]);
+            $data1 = DB::select("call sp_web_grafica_distribu1_list(?,?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int,$documento]);
+            $data2 = DB::select("call sp_web_grafica_distribu_list_g2(?,?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int,$documento]);
+            $data3 = DB::select("call sp_web_grafica_distribu2_list(?,?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int,$documento]);
+            //
+            $datamap = [];
+            if(strcmp($loc, "S") == 0) {
+                $distritos = DB::select("call sp_web_grafica_mapa1(?,?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int,$documento]);
+                //
+                $datamap = [];
+                $curr_distrito = -1;
+                $curr_codigo = -1;
+                $curr_entregado = 0;
+                $curr_total = 0;
+                foreach($distritos as $idx => $distrito) {
+                    if($distrito->cdist != $curr_codigo) {
+                        $path = implode(DIRECTORY_SEPARATOR, [env("APP_PUBLIC_PATH"),"jsdistritos",$curr_codigo . ".json"]);
+                        if($idx > 0) {
+                            $datamap[] = [
+                                "codigo" => $curr_codigo,
+                                "nombre" => $curr_distrito,
+                                "total" => $curr_total,
+                                "perc" => round(100 * $curr_entregado / $curr_total, 2),
+                                "puntos" => file_exists($path) ? json_decode(file_get_contents($path), true)["dots"] : []
+                            ];
+                        }
+                        $curr_codigo = $distrito->cdist;
+                        $curr_distrito = $distrito->ndist;
+                        $curr_total = 0;
+                        $curr_entregado = 0;
+                    }
+                    if(strcmp($distrito->estado, "Entregado") == 0) $curr_entregado = $distrito->cant;
+                    $curr_total += $distrito->cant;
+                }
+            }
             return Response::json([
                 "state" => "success",
                 "data" => [
                     "data1" => $data1,
                     "data2" => $data2,
-                    "data3" => $data3
+                    "data3" => $data3,
+                    "datamap" => $datamap
                 ]
             ]);
         }
@@ -77,150 +111,79 @@ class Indicadores extends Controller {
 
     //
 
-    public function if_entrega_g1() {
-        extract(Request::input());
-        if(isset($ccl,$grn,$str,$cno,$estado)) {
-            $data = DB::table("guias_ingreso as gi")
-                ->join("datos_adicionales as da", "gi.codautogen", "=", "da.codautogen")
-                ->join("envios_x_proceso as envxp", function($join) {
-                    $join->on("envxp.codautogen", "=", "da.Codautogen")
-                        ->on("envxp.nroproceso", "=", "da.Nroproceso")
-                        ->on("envxp.NroControl", "=", "da.NroControl");
-                })
-                ->leftJoin("motivos_justifica as justi2", function($join_j2) {
-                    $join_j2->on("justi2.CodMotivoEnvio", "=", "envxp.CodMotivoWeb")
-                        ->on("justi2.CodJustiMotivo", "=", "envxp.CodJustiWeb");
-                })
-                ->join("estados_envios", "envxp.CodEstadoWeb", "=", "estados_envios.CodEstadoEnvio")
-                ->join("motivos_natura", "envxp.CodMotivoWeb", "=", "motivos_natura.CodMotivoEnvio")
-                ->join("guias_ing_procesos as gip", function($join_gip) {
-                    $join_gip->on("gip.codautogen", "=", "envxp.codautogen")
-                        ->on("gip.nroproceso", "=", "envxp.nroproceso");
-                })
-                ->join("motivos_justifica as justi", function($join_justi) {
-                    $join_justi->on("justi.CodJustiMotivo", "=", "envxp.CodJustiWeb")
-                        ->on("justi.CodMotivoEnvio", "=", "envxp.CodMotivoWeb");
-                })
-                ->join("motivos_natura as moti", "envxp.CodMotivoWeb", "=", "moti.CodMotivoEnvio")
-                ->join("estados_envios as estenv", "envxp.CodEstadoWeb", "=", "estenv.CodEstadoEnvio")
-                ->leftJoin("direcciones as dire", "envxp.CodDestinatario", "=", "dire.CodDestinatario")
-                ->whereRaw("gi.dtmguia >= '2017-01-01'")
-                ->where("gip.FlgIngresosReclamo", "N")
-                ->where(DB::raw("case justi.Flg_Entrega_efectiva when 'S' then 'Directo' when 'N' then 'Bajo Puerta' else upper(moti.DesMotivoEnvio) end"), $estado)
-                ->whereIn("gi.CiCloCorteFactuCliente", $ccl)
-                //->whereIn("da.GrupoCliente", $cno)
-                //->whereIn("da.NroDocuCliente", $grn)
-                //->whereIn("da.Sector", $str)
-                ->select(
-                    DB::raw("case justi.Flg_Entrega_efectiva when 'S' then 'Directo' when 'N' then 'Bajo Puerta' else upper(moti.DesMotivoEnvio) end as motivo"),
-                    "da.IdeDestinatario as codcn",
-                    "dire.NomDestinatario as consult",
-                    "gi.CiCloCorteFactuCliente as ciclo",
-                    "estenv.DesEstadoEnvio as situacion"
-                )
-                ->orderBy("motivo", "asc")
-                ->orderBy("situacion", "asc")
-                ->get();
-            return Response::json([
-                "success" => true,
-                "data" => $data
-            ]);
-        }
-        return Response::json([
-            "success" => false,
-            "message" => "Parámetros incorrectos"
-        ]);
-    }
-
-    public function if_entrega_g2() {
+    public function if_entrega_distrito() {
         if(Request::ajax()) {
             extract(Request::input());
-            if(isset($ccl,$grn,$str,$cno,$dia,$est)) {
-                $data = DB::table("guias_ingreso as gi")
+            if(isset($ccl,$grn,$str,$cno,$dst)) {
+                $distritos = DB::table("guias_ingreso as gi")
                     ->join("datos_adicionales as da", "gi.codautogen", "=", "da.codautogen")
-                    ->join("envios_x_proceso as envxp", function($join) {
-                        $join->on("envxp.codautogen", "=", "da.Codautogen")
+                    ->join("envios_x_proceso as envxp", function($join_envxp) {
+                        $join_envxp->on("envxp.codautogen", "=", "da.Codautogen")
                             ->on("envxp.nroproceso", "=", "da.Nroproceso")
                             ->on("envxp.NroControl", "=", "da.NroControl");
                     })
-                    ->join("estados_envios", "envxp.CodEstadoWeb", "=", "estados_envios.CodEstadoEnvio")
+                    ->join("estados_envios as esenv", "envxp.CodEstadoWeb", "=", "esenv.CodEstadoEnvio")
                     ->join("motivos_envios as moti", "moti.CodMotivoEnvio", "=", "envxp.CodMotivoWeb")
-                    ->join("motivos_natura", "envxp.CodMotivoWeb", "=", "motivos_natura.CodMotivoEnvio")
+                    ->join("motivos_natura as mot", "envxp.CodMotivoWeb", "=", "mot.CodMotivoEnvio")
                     ->join("motivos_justifica as justi", function($join_justi) {
                         $join_justi->on("justi.CodJustiMotivo", "=", "envxp.CodJustiWeb")
                             ->on("justi.CodMotivoEnvio", "=", "envxp.CodMotivoWeb");
                     })
-                    ->join("guias_ing_procesos as gip", function($join) {
-                        $join->on("gip.codautogen", "=", "envxp.codautogen")
+                    ->join("guias_ing_procesos as gip", function($join_gip) {
+                        $join_gip->on("gip.codautogen", "=", "envxp.codautogen")
                             ->on("gip.nroproceso", "=", "envxp.nroproceso");
                     })
+                    ->join("vcode as vcd", "envxp.CodVcodAuto", "=", "vcd.CodVcodAuto")
                     ->whereRaw("gi.dtmguia >= '2017-01-01'")
                     ->where("gip.FlgIngresosReclamo", "N")
                     ->whereIn("gi.CiCloCorteFactuCliente", $ccl)
                     ->whereIn("da.GrupoCliente", $cno)
                     ->whereIn("da.NroDocuCliente", $grn)
                     ->whereIn("da.Sector", $str)
-                    ->where(DB::raw("f_obtiene_numerodia_visita(envxp.codautogen,envxp.nroproceso, DATE(envxp.DtUltVisitaWeb))"), $dia)
-                    ->where("estados_envios.DesEstadoEnvio", $est)
+                    ->where("vcd.CodDpto", "15")
+                    ->where("vcd.CodProv", "01")
+                    ->where(DB::raw("concat(vcd.CodDpto,vcd.CodProv,vcd.CodDist)"), $dst)
                     ->select(
-                        DB::raw("case justi.Flg_Entrega_efectiva when 'S' then 'Directo' when 'N' then 'Bajo Puerta' else upper(moti.DesMotivoEnvio) end as motivo"),
-                        DB::raw("count(*) as cant"))
-                    ->groupBy("motivo")
-                    ->get();
-                return Response::json([
-                    "success" => true,
-                    "data" => $data
-                ]);
-            }
-            else return Response::json([
-                "success" => false,
-                "message" => "Parámetros incorrectos"
-            ]);
-        }
-        else return Response::json([
-            "success" => false,
-            "message" => "No tiene permisos para acceder aquí"
-        ]);
-    }
-
-    public function if_entrega_g3() {
-        if(Request::ajax()) {
-            extract(Request::input());
-            if(isset($ccl,$grn,$str,$cno,$est)) {
-                $data = DB::table("guias_ingreso as gi")
-                    ->join("datos_adicionales as da", "gi.codautogen", "=", "da.codautogen")
-                    ->join("envios_x_proceso as envxp", function($join) {
-                        $join->on("envxp.codautogen", "=", "da.Codautogen")
-                            ->on("envxp.nroproceso", "=", "da.Nroproceso")
-                            ->on("envxp.NroControl", "=", "da.NroControl");
-                    })
-                    ->join("estados_envios", "envxp.CodEstadoWeb", "=", "estados_envios.CodEstadoEnvio")
-                    ->join("motivos_envios as moti", "moti.CodMotivoEnvio", "=", "envxp.CodMotivoWeb")
-                    ->join("motivos_natura", "envxp.CodMotivoWeb", "=", "motivos_natura.CodMotivoEnvio")
-                    ->join("motivos_justifica as justi", function($join_justi) {
-                        $join_justi->on("justi.CodJustiMotivo", "=", "envxp.CodJustiWeb")
-                            ->on("justi.CodMotivoEnvio", "=", "envxp.CodMotivoWeb");
-                    })
-                    ->join("guias_ing_procesos as gip", function($join) {
-                        $join->on("gip.codautogen", "=", "envxp.codautogen")
-                            ->on("gip.nroproceso", "=", "envxp.nroproceso");
-                    })
-                    ->whereRaw("gi.dtmguia >= '2017-01-01'")
-                    ->where("gip.FlgIngresosReclamo", "N")
-                    ->whereIn("gi.CiCloCorteFactuCliente", $ccl)
-                    ->whereIn("da.GrupoCliente", $cno)
-                    ->whereIn("da.NroDocuCliente", $grn)
-                    ->where("da.Sector", str_replace("+", " ", $str))
-                    ->where("estados_envios.DesEstadoEnvio", $est)
-                    ->select(
+                        "esenv.DesEstadoEnvio as estado",
                         DB::raw("case justi.Flg_Entrega_efectiva when 'S' then 'Directo' when 'N' then 'Bajo Puerta' else upper(moti.DesMotivoEnvio) end as motivo"),
                         DB::raw("count(*) as cant")
                     )
-                    ->groupBy("motivo")
+                    ->groupBy("estado", "motivo")
                     ->get();
+                $arr_distritos = [];
+                $arr_motivos = [];
+                $curr_estado = "x";
+                $curr_total = 0;
+                $ultra_total = 0;
+                foreach ($distritos as $idx => $distrito) {
+                    if(strcmp($curr_estado, $distrito->estado) != 0) {
+                        if($idx > 0) {
+                            $arr_distritos[] = [
+                                "estado" => $curr_estado,
+                                "cantidad" => $curr_total,
+                                "motivos" => $arr_motivos
+                            ];
+                        }
+                        $curr_estado = $distrito->estado;
+                        $curr_total = 0;
+                        $arr_motivos = [];
+                    }
+                    $curr_total += $distrito->cant;
+                    $arr_motivos[] = [
+                        "motivo" => $distrito->motivo,
+                        "cantidad" => $distrito->cant
+                    ];
+                    $ultra_total += $distrito->cant;
+                }
+                $arr_distritos[] = [
+                    "estado" => $curr_estado,
+                    "cantidad" => $curr_total,
+                    "motivos" => $arr_motivos
+                ];
                 return Response::json([
                     "success" => true,
-                    "data" => $data
+                    "data" => $arr_distritos,
+                    "todo" => $ultra_total
                 ]);
             }
             else return Response::json([

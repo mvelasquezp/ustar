@@ -72,6 +72,38 @@ class Tracking extends Controller {
         ]);
     }
 
+    public function sv_reclamo() {
+        extract(Request::input());
+        if(isset($autogen, $proceso, $control, $tipo, $titulo, $mensaje)) {
+            $user = Auth::user();
+            DB::table("atc_cab")->insert([
+                "fRegistro" => date("Y-m-d H:i:s"),
+                "vUsuRegistra" => $user->v_Codusuario,
+                "cTipoGestionAtc" => "R",
+                "iMotivoGestionAtc" => $tipo,
+                "vEstado" => "PENDIENTE",
+                "iCodConclusion" => 5,
+                "vAsunto" => $titulo,
+                "vDescripcion" => $mensaje,
+                "cFlgEnviado" => "S",
+                "fEnvio" => date("Y-m-d"),
+                "hEnvio" => date("H:i:s"),
+                "CodAutogen" => $autogen,
+                "iCodAutogenAtc" => 0,
+                "NroProceso" => $proceso,
+                "NroControl" => $control,
+                "iCodCliente" => $user->i_CodCliente,
+            ]);
+            return Response::json([
+                "state" => "success"
+            ]);
+        }
+        return Response::json([
+            "state" => "error",
+            "message" => "Parámetros de búsqueda incorrectos"
+        ]);
+    }
+
     public function export() {
         $user = Auth::user();
         extract(Request::input());

@@ -37,6 +37,7 @@ Route::group(["namespace" => "Web"], function() {
 		Route::group(["prefix" => "ajax"], function() {
 			Route::post("buscar", "Tracking@buscar");
 			Route::post("detalle", "Tracking@detalle");
+			Route::post("sv-reclamo", "Tracking@sv_reclamo");
 			Route::post("export", "Tracking@export");
 		});
 	});

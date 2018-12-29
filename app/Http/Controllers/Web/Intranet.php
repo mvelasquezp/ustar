@@ -52,12 +52,18 @@ class Intranet extends Controller {
         $cmb_oficinas = DB::select("call sp_web_combo_areas(?)", [$user->v_Codusuario]);
         $cmb_ccostos = DB::select("call sp_web_combo_ccostos(?)", [$user->v_Codusuario]);
         $cmb_productos = DB::select("call sp_web_combo_tipoenvios(?)", [$user->v_Codusuario]);
+        $tipos = DB::table("atc_motivos_gestion")
+            ->where("cTipoGestionAtc", "R")
+            ->select("iMotivoGestionAtc as value","VDesMotivo as text")
+            ->orderBy("iOrdenLista","asc")
+            ->get();
         $arrData = [
             "usuario" => $user,
             "menu" => 2,
             "opcion" => "Tracking",
             "ofcs" => $cmb_oficinas,
-            "prds" => $cmb_productos
+            "prds" => $cmb_productos,
+            "tipos" => $tipos,
         ];
         return view("intranet.tracking")->with($arrData);
     }

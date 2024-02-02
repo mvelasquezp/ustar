@@ -4,10 +4,10 @@
 		<title>Servicios | Distribución</title>
 		@include("common.styles")
 		<link rel="stylesheet" type="text/css" href="{{ asset('css/datepicker.min.css') }}">
-		<link rel="stylesheet" type="text/css" href="{{ asset('css/bootstrap-select.css') }}">
 		<style type="text/css">
 			.table-responsive{max-height:1000px !important;}
 			.map-canvas{height:480px;width:640px;}
+			.images-ifr {height:640px;width:1080px;border:1px solid #888}
 		</style>
 	</head>
 	<body>
@@ -23,32 +23,22 @@
 							<input type="text" class="form-control form-control-sm datepicker" id="fhasta" placeholder="Hasta" style="width:7em;">
 							<!-- -->
 							<label class="form-control-sm" for="producto">Producto</label>
-							<!--select class="form-control form-control-sm" id="producto" style="max-width:90px;">
+							<select class="form-control form-control-sm" id="producto" style="max-width:90px;">
 								@foreach($prds as $producto)
-								<option value="{{ $producto->codigo }}">{{ $producto->descripcion }}</option>
-								@endforeach
-							</select-->
-							<select id="trg-producto" class="selectpicker" multiple data-live-search="true">
-								@foreach($prds as $idx => $producto)
 								<option value="{{ $producto->codigo }}">{{ $producto->descripcion }}</option>
 								@endforeach
 							</select>
 							<!-- -->
 							@if(strcmp($usuario->tp_cliente,'admin') == 0)
 							<label class="form-control-sm" for="oficina">Oficina</label>
-							<!--select class="form-control form-control-sm" id="oficina" style="max-width:90px;">
+							<select class="form-control form-control-sm" id="oficina" style="max-width:90px;">
 								@foreach($ofcs as $oficina)
-								<option value="{{ $oficina->codigo }}">{{ $oficina->descripcion }}</option>
-								@endforeach
-							</select-->
-							<select id="trg-oficina" class="selectpicker" multiple data-live-search="true">
-								@foreach($ofcs as $idx => $oficina)
 								<option value="{{ $oficina->codigo }}">{{ $oficina->descripcion }}</option>
 								@endforeach
 							</select>
 							<!-- -->
 							@else
-							<input type="hidden" id="oficina" class="ch-of" value="{{ $ofcs[0]->codigo }}">
+							<input type="hidden" id="oficina" value="{{ $ofcs[0]->codigo }}">
 							@endif
 							<!-- -->
 							<label class="form-control-sm" for="documento">
@@ -83,8 +73,11 @@
 									<th>Control</th>
 									<th>Nombre</th>
 									<th>Direccion</th>
+									<th>Departamento</th>
+									<th>Provincia</th>
 									<th>Ciudad</th>
-									<th>Dedestinatario</th>
+									<th>Puesto</th>
+									<th>Destinatario</th>
 									<th>Tp.Envio</th>
 									<th>Contenido</th>
 									<th>Servicio</th>
@@ -106,13 +99,13 @@
 			<nav aria-label="Page navigation example">
 				<ul id="pager" class="pagination pagination-sm justify-content-center">
 					<li class="page-item disabled">
-						<a class="page-link" href="#" tabindex="-1">Previous</a>
+						<a class="page-link" href="#" tabindex="-1">Anterior</a>
 					</li>
 					<li class="page-item active"><a class="page-link" href="#">1</a></li>
 					<li class="page-item"><a class="page-link" href="#">2</a></li>
 					<li class="page-item"><a class="page-link" href="#">3</a></li>
 					<li class="page-item">
-						<a class="page-link" href="#">Next</a>
+						<a class="page-link" href="#">Siguiente</a>
 					</li>
 				</ul>
 				<div class="floating-buttons-container">
@@ -121,50 +114,43 @@
 				</div>
 			</nav>
 		</div>
-		<!-- modals -->
 		<div id="modal-reclamo" class="modal fade" tabindex="-1" role="dialog">
 			<div class="modal-dialog" role="document">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title">Registrar un reclamo</h5>
+						<h5 class="modal-title">Nuevo reclamo</h5>
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 							<span aria-hidden="true">&times;</span>
 						</button>
 					</div>
 					<div class="modal-body">
-						<div class="container">
-							<div class="row">
-								<div class="col">
-									<form>
-			                            <input type="hidden" id="rec-autogen" />
-			                            <input type="hidden" id="rec-proceso" />
-			                            <input type="hidden" id="rec-control" />
-			                            <input type="hidden" id="rec-idx" />
-				                        <div class="form-group">
-				                            <label for="rec-tipo">Tipo de reclamo:</label>
-				                            <select class="form-control" id="rec-tipo">
-			                                    <option value="0" selected disabled>Seleccione</option>
-			                                    @foreach($tipos as $tipo)
-			                                    <option value="{{ $tipo->value }}">{{ $tipo->text }}</option>
-			                                    @endforeach
-			                                </select>
-				                        </div>
-				                        <div class="form-group">
-				                            <label for="rec-titulo">Asunto</label>
-				                            <input type="text" id="rec-titulo" class="form-control form-control-sm">
-				                        </div>
-				                        <div class="form-group">
-				                            <label for="rec-mensaje">Descripción</label>
-				                            <textarea id="rec-mensaje" class="form-control form-control-sm" rows="5" style="resize:none;"></textarea>
-				                        </div>
-				                    </form>
-								</div>
+						<form>
+							<input type="hidden" id="rg-idx" />
+							<input type="hidden" id="rg-autogen" />
+							<input type="hidden" id="rg-proceso" />
+							<input type="hidden" id="rg-control" />
+							<div class="form-group">
+								<label for="rg-tipo">Tipo de reclamo</label>
+								<select id="rg-tipo" class="form-control form-control-sm">
+									<option value="0">- Seleccione -</option>
+									@foreach ($tipos as $tipo)
+									<option value="{{ $tipo->value }}">{{ $tipo->text }}</option>
+									@endforeach
+								</select>
 							</div>
-						</div>
+							<div class="form-group">
+								<label for="rg-titulo">Título</label>
+								<input type="text" id="rg-titulo" class="form-control form-control-sm" placeholder="Ingrese el asunto del reclamo" />
+							</div>
+							<div class="form-group">
+								<label for="rg-mensaje">Mensaje</label>
+								<textarea id="rg-mensaje" rows="5" class="form-control form-control-sm" style="resize:none;" placeholder="Escriba aquí los detalle sde su reclamo"></textarea>
+							</div>
+						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
-						<button type="button" class="btn btn-primary">Enviar el reclamo</button>
+						<button type="button" class="btn btn-sm btn-light" data-dismiss="modal">Cancelar</button>
+						<button type="button" class="btn btn-sm btn-primary"><i class="fa fa-floppy-o"></i> Registrar reclamo</button>
 					</div>
 				</div>
 			</div>
@@ -181,7 +167,7 @@
 		<script type="text/javascript" src="{{ asset('js/datepicker.min.js') }}"></script>
     	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKznc28sCbcKDuJh2AHpFohCItP5YIwKk" async defer></script>
 		<script type="text/javascript">
-			var data, arr_ofcs = [0], arr_prds = [0];
+			var data;
 			$(".datepicker").datepicker({
 				autoclose: true,
 				format: "dd/mm/yyyy",
@@ -192,8 +178,6 @@
 				event.preventDefault();
 				var a = $(this);
 				var tr = a.parent().parent().next().next();
-				const ereclamo = a.data("rcid");
-				const eweb = a.data("sweb");
 				if(a.data("state") == "hidden") {
 					tr.fadeIn(150);
 					a.data("state","showed");
@@ -234,7 +218,7 @@
 									ipunto.lon = row.longitud;
 								}
 							}
-							var table = $("<table/>").addClass("table table-striped table-sm").append(
+							var table = $("<table/>").addClass("table table-striped table-sm mb-1").append(
 								$("<thead/>").addClass("bg-success text-light").append(
 									$("<tr/>").append(
 										$("<th/>").html("Fecha")
@@ -246,6 +230,7 @@
 								)
 							).append(tbody);
 							//arma el carrusel de imagenes
+							/*
 							var carrusel;
 							if(imgs.length > 0) {
 								var carr_indicators = $("<ol/>").addClass("carousel-indicators");
@@ -306,6 +291,9 @@
 									$("<p/>").html("No hay imágenes registradas para este cargo")
 								);
 							}
+							*/
+							let iframe = $('<iframe>').attr('src', '{{ url("tracking/imagenes") }}/' + p.agn + '/' + p.prc + '/' + p.ctr).addClass('images-ifr');
+// tracking/imagenes
 							//inserta todo el contenido
 							var td = tr.children("td").eq(1);
 							td.empty().append(
@@ -351,21 +339,19 @@
 										"aria-labelledby": "seguimiento-tab-" + idx
 									}).css("padding","5px").append(
 										$("<div/>").addClass("row").append(
-											$("<div/>").addClass("col-sm-12 col-md-8 col-lg-6").append(table)
-										).append(
-											$("<div/>").addClass("col-sm-12 col-md-4 col-lg-6 h-100").append(
-												$("<div/>").append(
-													$("<a/>").addClass("btn btn-sm " + (ereclamo == 0 ? "btn-danger" : "btn-secondary")).attr({
-														"href": (eweb == 'P' ? 'El envío se encuentra en proceso de reparto y actualización' : (ereclamo == 0 ? "#" : "javascript:alert('Ya tiene reclamo registrado')")),
-														"id": "btn-reclamo-" + idx,
-														"data-autogen": p.agn,
-														"data-proceso": p.prc,
-														"data-control": p.ctr,
-														"data-idx": idx,
-														"data-toggle": (ereclamo == 0 || eweb == 'P') ? "modal" : "",
-														"data-target": (ereclamo == 0 || eweb == 'P') ? "#modal-reclamo" : ""
-													}).html("Deseo hacer un reclamo")
-												).addClass("h-100")
+											$("<div/>").addClass("col-sm-12 col-md-8 col-lg-6").append(table).append(
+												a.data("reclamo") == '0' ?
+												$('<a>').attr({
+													'href': '#',
+													'id': 'bt-reclamo-' + idx,
+													'data-toggle': 'modal',
+													'data-target': '#modal-reclamo',
+													'data-autogen': a.data('autogen'),
+													'data-proceso': a.data('proceso'),
+													'data-control': a.data('control'),
+													'data-idx': idx
+												}).addClass('btn btn-sm btn-danger mb-2').html('Deseo hacer un reclamo') :
+												$('<p>').addClass('text-dark mb-2').html('Ya posee un reclamo')
 											)
 										)
 									)
@@ -375,7 +361,7 @@
 										"role": "tabpanel",
 										"aria-labelledby": "galeria-tab-" + idx
 									}).append(
-										$("<div/>").addClass("col-sm-12 col-md-8 col-lg-6").append(carrusel)
+										$("<div/>").addClass("col-sm-12 col-md-8 col-lg-6").append(iframe)
 									)
 								).append(
 									$("<div/>").addClass("tab-pane fade").attr({
@@ -416,7 +402,10 @@
 					tbody.append(
 						$("<tr/>").append(
 							$("<td/>").append(
-								$("<a/>").addClass("btn btn-primary btn-sm").attr({href:"#",role:"button"}).data("idx",i).data("loaded","0").data("state","hidden").data("rcid",fila.ereclamo).data("sweb", fila.sweb).html(i + 1).on("click", toggleRow)
+								$("<a/>").addClass("btn btn-primary btn-sm").attr({
+									href:"#",
+									role:"button"
+								}).data("idx",i).data("loaded","0").data("state","hidden").data('autogen',fila.autogen).data('proceso',fila.remito).data('control',fila.control).data('reclamo',fila.ereclamo).html(i + 1).on("click", toggleRow)
 							)
 						).append(
 							$("<td/>").html(fila.fecing)
@@ -431,7 +420,13 @@
 						).append(
 							$("<td/>").html(fila.direccion)
 						).append(
-							$("<td/>").html(fila.ciudad)
+							$("<td/>").html(fila.NomDpto)
+						).append(
+							$("<td/>").html(fila.NomProv)
+						).append(
+							$("<td/>").html(fila.NomDist)
+						).append(
+							$("<td/>").html(fila.puesto)
 						).append(
 							$("<td/>").html(fila.idedestin)
 						).append(
@@ -441,9 +436,9 @@
 						).append(
 							$("<td/>").html(fila.servicio)
 						).append(
-							$("<td/>").html(fila.motivo)
+							$("<td/>").html(fila.estado_actual)
 						).append(
-							$("<td/>").html(fila.ultvisita)
+							$("<td/>").html(fila.fe_estado_actual)
 						).append(
 							$("<td/>").html(fila.nrodocu)
 						).append(
@@ -558,16 +553,13 @@
 			$("#btn-form").on("click", function(event) {
 				var a = $(this);
 				a.hide();
-				$("#main-tbody").empty();
 				$("#loader-busqueda").fadeIn(150);
 				var p = {
 					_token: "{{ csrf_token() }}",
 					dsd: document.getElementById("fdesde").value,
 					hst: document.getElementById("fhasta").value,
-					/*ofc: [document.getElementById("oficina").value],
-					prd: [document.getElementById("producto").value],*/
-					ofc: arr_ofcs,
-					prd: arr_prds,
+					ofc: [document.getElementById("oficina").value],
+					prd: [document.getElementById("producto").value],
 					doc: document.getElementById("documento").value,
 					ref: document.getElementById("refcli").value,
 					dst: document.getElementById("destinatario").value
@@ -620,80 +612,24 @@
 					else alert(response.message);
 				}, "json");
 			});
-			//
-			function ModalReclamoOnShow(args) {
-				const data = args.relatedTarget.dataset;
-				document.getElementById("rec-autogen").value = data.autogen;
-				document.getElementById("rec-proceso").value = data.proceso;
-				document.getElementById("rec-control").value = data.control;
-				document.getElementById("rec-idx").value = data.idx;
-				$("#rec-tipo option[value=0]").prop("selected", true);
-				document.getElementById("rec-titulo").value = "";
-				document.getElementById("rec-mensaje").value = "";
-			}
-			function EnviaReclamo(event) {
-				event.preventDefault();
-				const a = $(this);
-				a.removeClass("btn-primary").addClass("btn-disabled").off("click");
-				const p = {
-					_token: "{{ csrf_token() }}",
-					autogen: document.getElementById("rec-autogen").value,
-					proceso: document.getElementById("rec-proceso").value,
-					control: document.getElementById("rec-control").value,
-					tipo: document.getElementById("rec-tipo").value,
-					titulo: document.getElementById("rec-titulo").value,
-					mensaje: document.getElementById("rec-mensaje").value
+			function RegistraReclamo(args) {
+				let params = {
+					_token: '{{ csrf_token() }}',
+					autogen: document.getElementById('rg-autogen').value,
+					proceso: document.getElementById('rg-proceso').value,
+					control: document.getElementById('rg-control').value,
+					tipo: document.getElementById('rg-tipo').value,
+					titulo: document.getElementById('rg-titulo').value,
+					mensaje: document.getElementById('rg-mensaje').value
 				};
-				if(p.tipo == 0) {
-					alert("Seleccione un tipo de reclamo");
-					return;
-				}
-				if(p.titulo == "") {
-					alert("Ingrese el asunto");
-					return;
-				}
-				if(p.mensaje == "") {
-					alert("Redacte una descripción para el reclamo");
-					return;
-				}
-				$.post("{{ url('tracking/ajax/sv-reclamo') }}", p, (response) => {
-					if(response.state == "success") {
-						alert("Reclamo enviado");
-						$("#btn-reclamo-" + document.getElementById("rec-idx").value).removeClass("btn-danger").addClass("btn-secondary").removeAttr("data-toggle").removeAttr("data-target").attr("href","javascript:alert('Ya tiene reclamo registrado')");
-						$("#modal-reclamo").modal("hide");
-					}
-					else alert(response.msg);
-					a.removeClass("btn-disabled").addClass("btn-primary").on("click", EnviaReclamo);
-				}, "json").fail(function() {
-					a.removeClass("btn-disabled").addClass("btn-primary").on("click", EnviaReclamo);
-				});
+				$.post('{{ url("tracking/ajax/sv-reclamo") }}', params, function(result) {
+					alert('Reclamo registrado');
+					$('#bt-reclamo-' + document.getElementById('rg-idx').value).hide().parent().append(
+						$('<p>').addClass('text-dark mb-2').html('Ya posee un reclamo')
+					);
+					$('#modal-reclamo').modal('hide');
+				}, 'json');
 			}
-			$("#modal-reclamo .modal-footer .btn-primary").on("click", EnviaReclamo);
-			$("#modal-reclamo").on("show.bs.modal", ModalReclamoOnShow);
-			$("#trg-oficina").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
-				var select = $(this);
-				arr_ofcs = $(this).val();
-				if(clickedIndex == 0) {
-					if(isSelected) {
-						select.selectpicker("selectAll");
-						arr_ofcs = ["Todos"];
-					}
-					else select.selectpicker("deselectAll");
-				}
-				console.log(arr_ofcs);
-			});
-			$("#trg-producto").on("changed.bs.select", function (e, clickedIndex, isSelected, previousValue) {
-				var select = $(this);
-				arr_prds = $(this).val();
-				if(clickedIndex == 0) {
-					if(isSelected) {
-						select.selectpicker("selectAll");
-						arr_prds = ["Todos"];
-					}
-					else select.selectpicker("deselectAll");
-				}
-				console.log(arr_prds);
-			});
 			//
 	        DibujarMapa = (div, coords) => {
 	            $("#" + div).addClass("map-canvas").empty();
@@ -707,7 +643,16 @@
 	                title: "Punto de entrega"
 	            });
 	        }
+			//
+			$('#modal-reclamo .modal-footer .btn-primary').on('click', RegistraReclamo);
+			$('#modal-reclamo').on('show.bs.modal', function(args) {
+				let dataset = args.relatedTarget.dataset;
+				$('#rg-tipo option[value=0]').prop('selected',true);
+				document.getElementById('rg-autogen').value = dataset.autogen;
+				document.getElementById('rg-proceso').value = dataset.proceso;
+				document.getElementById('rg-control').value = dataset.control;
+				document.getElementById('rg-idx').value = dataset.idx;
+			});
 		</script>
-		<script type="text/javascript" src="{{ asset('js/bootstrap-select.js') }}"></script>
 	</body>
 </html>

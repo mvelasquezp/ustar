@@ -17,7 +17,7 @@ class Intranet extends Controller {
      */
 
     public function __construct() {
-        $this->middleware("auth");
+        $this->middleware("auth")->except(["viewer"]);
         date_default_timezone_set("America/Lima");
     }
 
@@ -96,6 +96,26 @@ class Intranet extends Controller {
         return view("intranet.identregas")->with($arrData);
     }
 
+    public function masivos() {
+        $user = Auth::user();
+        $arrData = [
+            "usuario" => $user,
+            "menu" => 7,
+            "opcion" => "Carga masiva"
+        ];
+        return view("intranet.carga-masiva")->with($arrData);
+    }
+
+    public function reporte_masivos () {
+        $user = Auth::user();
+        $arrData = [
+            "usuario" => $user,
+            "menu" => 7,
+            "opcion" => "Reporte envíos masivos"
+        ];
+        return view("intranet.reporte-masivos")->with($arrData);
+    }
+
     public function usuarios() {
         $user = Auth::user();
         $cmb_oficinas = DB::select("call sp_web_combo_areas(?)", [$user->v_Codusuario]);
@@ -116,8 +136,9 @@ class Intranet extends Controller {
 
     //adicionales
 
-    public function viewer($param) {
+    public function viewer($param, $oldpath) {
         $file = implode(DIRECTORY_SEPARATOR, [env("APP_STORAGE_PATH"), str_replace("@", DIRECTORY_SEPARATOR, $param)]);
+        if (!file_exists($file)) $file = implode(DIRECTORY_SEPARATOR, [env("APP_STORAGE_PATH"), str_replace("@", DIRECTORY_SEPARATOR, $oldpath)]);
         $type = "image/jpeg";
         header("Content-Type:" . $type);
         define("DST_HEIGHT", 540);
@@ -152,11 +173,54 @@ class Intranet extends Controller {
     }
 
     public function download($filename) {
-        $filepath = implode(DIRECTORY_SEPARATOR, [env("APP_FILES_PATH"), $filename . ".xls"]);
+        $xlspath = implode(DIRECTORY_SEPARATOR, [env("APP_FILES_PATH"), $filename . ".xls"]);
+        $xlsxpath = implode(DIRECTORY_SEPARATOR, [env("APP_FILES_PATH"), $filename . ".xlsx"]);
+        if (file_exists($xlspath)) return response()->download($xlspath);
+        if (file_exists($xlsxpath)) return response()->download($xlsxpath);
+        return "El archivo $xlspath no existe";
+        /*
         header("Content-Type: " . pathinfo($filepath, PATHINFO_EXTENSION));
         header("Content-Length: ". filesize($filepath));
-        header("Content-Disposition: attachment; filename=export.xls");
+        header("Content-Disposition: attachment; filename=export.xlsx");
         readfile($filepath);
+        */
     }
 
+    //
+
+    public function pdf() {
+        $cabecera = new \stdClass();
+            $cabecera->origen = "LIMA";
+            $cabecera->destino = "NAMEKUSEI";
+            $cabecera->NroManifiesto = "142857";
+            $cabecera->DtmManifiesto = "03-06-2019";
+            $cabecera->TipoTrans = "TERRESTRE";
+            $cabecera->NomPersonal = "PEPO PEPPERONI";
+        $item = new \stdClass();
+            $item->AbrTipDocu = "DNI";
+            $item->CodGuia = "G01-1156";
+            $item->AbrAreaCliente = "PAQUETERIA";
+            $item->AbrTipoEnvio = "VALIJA";
+            $item->CodClaseCarga = "P";
+            $item->CanEnvios = "7";
+            $item->CanPesoVolum = "5";
+            $item->DtmGuia = "05-06-2019";
+            $item->CodClaseServicio = "06";
+            $item->TipoTransFac = "88";
+            $item->NroProceso = "17";
+            $item->CanPeso = "4";
+            $item->AbrServicio = "VLJ";
+        $detalle = [$item,$item,$item];
+        $tipos = [
+            "S" => "Sobres",
+            "P" => "Paquete",
+            "C" => "Caja",
+            "V" => "Valija"
+        ];
+        $file = env("APP_PUBLIC_PATH") . "/pdf/" . date("YmdHis") . ".pdf";
+        $pdf = \PDF::loadView("pdf.manifiesto", compact("cabecera","detalle","tipos"))
+            ->setPaper("a4", "portrait");
+            $pdf->save($file);
+        return "listijirillo";
+    }
 }

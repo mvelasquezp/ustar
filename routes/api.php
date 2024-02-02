@@ -14,24 +14,14 @@ use Illuminate\Http\Request;
 */
 
 Route::group(["prefix" => "ustar"], function() {
-	Route::any("home", "WebService@home");
-	Route::any("login", "WebService@login");
-	Route::any("accesos", "WebService@ls_acceso_modulos");
-	Route::any("resumen", "WebService@ls_resumen_pariente");
-	//modulo de despachos
-	Route::any("despachos", "WebService@ls_lista_despachos");
-	Route::any("upd-despacho", "WebService@upd_despacho");
-	//modulo de recojos
-	Route::any("recojos", "WebService@ls_lista_recojos");
-	Route::any("det-recojos", "WebService@ls_detalle_recojo");
-	Route::any("upd-recojo", "WebService@upd_recojo");
-	//modulo de entregas
-	Route::any("entregas", "WebService@ls_lista_entregas");
-	Route::any("upd-entrega", "WebService@upd_entrega");
-	Route::any("upd-imagen", "WebService@upd_imagen");
-	//nuevos ustar
-	Route::any("ls-datos", "WebService@ls_datos_adicionales");
-	Route::any("ls-galeria-paquete", "WebService@ls_galeria_paquete");
-	Route::any("sv-imagen", "WebService@sv_imagen");
-	Route::any("dt-imagen", "WebService@dt_imagen");
+	Route::any("{query}", function () {
+		$result = "error";
+        $rqid = 0;
+        $message = "Actualice el app para acceder";
+        return response()->json(compact("result", "rqid", "message"), 200);
+	})->where("query", ".*");
+});
+Route::get("prueba", function () {
+	mkdir("/var/www/html/imagenes/tif/GI/888-8895");
+	return "listo";
 });

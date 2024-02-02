@@ -548,70 +548,7 @@
 						    plotOptions: {
 						        column: {
 						            stacking: 'normal'
-						        },
-						        series: {
-			                        events: {
-			                            click: function(event) {
-			                                var p = {
-			                                    _token: "{{ csrf_token() }}",
-			                                    ccl: $("#adCiclo").val(),
-			                                    grn: $("#adGerencia").val(),
-			                                    str: $("#adSector").val(),
-			                                    cno: $("#adCNO").val(),
-			                                    dia: event.point.category,
-			                                    est: event.point.series.name
-			                                };
-			                                $("#modal-extra").modal("show");
-			                                $("#modal-extra-container").empty().append(
-			                                    $("<p/>").html("Cargando datos. Por favor, espere...")
-			                                );
-			                                $("#me-dia").val(p.dia);
-			                                $("#me-estado").val(p.est);
-			                                $.post("{{ url('indicadores/ajax/if-entrega-g2') }}", p, function(response) {
-			                                    if(response.success) {
-			                                        var arr_pie = [];
-			                                        var fdata = response.data;
-			                                        for(var i in fdata) {
-			                                            var idata = fdata[i];
-			                                            arr_pie.push({name:idata.motivo,y:parseInt(idata.cant)});
-			                                        }
-			                                        $("#modal-extra-container").empty().highcharts({
-			                                            chart: {
-			                                                plotBackgroundColor: null,
-			                                                plotBorderWidth: 1,//null,
-			                                                plotShadow: false
-			                                            },
-			                                            title: {
-			                                                text: "Detalle del día " + p.dia
-			                                            },
-			                                            tooltip: {
-			                                                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-			                                            },
-			                                            plotOptions: {
-			                                                pie: {
-			                                                    allowPointSelect: true,
-			                                                    cursor: 'pointer',
-			                                                    dataLabels: {
-			                                                        enabled: true,
-			                                                        format: '<b>{point.name}</b>: {point.y} ({point.percentage:.2f} %)',
-			                                                        style: {
-			                                                            color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
-			                                                        }
-			                                                    }
-			                                                }
-			                                            },
-			                                            series: [{
-			                                                type: 'pie',
-			                                                name: 'Porcentaje',
-			                                                data: arr_pie
-			                                            }]
-			                                        });
-			                                    }
-			                                    else alert(response.message);
-			                                }, "json");
-			                            }
-			                        }
-			                    }
+						        }
 						    },
 						    series: ds2
 						});
@@ -696,11 +633,14 @@
 				                        var punto = $(this)[0];
 				                        var distrito = punto.distrito;
 				                        var p = {
-				                            _token: "{{ csrf_token() }}",
-				                            ccl: $("#adCiclo").val(),
-				                            grn: $("#adGerencia").val(),
-				                            str: $("#adSector").val(),
-				                            cno: $("#adCNO").val(),
+											_token: "{{ csrf_token() }}",
+											ccl: arr_ciclos,
+											ofc: arr_ofcs,
+											prd: arr_prds,
+											loc: document.getElementById("tplocal").checked ? 'S' : 'N',
+											nac: document.getElementById("tpnacional").checked ? 'S' : 'N',
+											int: document.getElementById("tpinternacional").checked ? 'S' : 'N',
+											doc: document.getElementById("nrdoc").value,
 				                            dst: distrito.codigo
 				                        };
 				                        $("#modal-info-container").empty().append(
@@ -715,12 +655,12 @@
 				                                for(var i in data) {
 				                                    var restado = data[i];
 				                                    tbody.append(
-				                                        $("<tr/>").addClass("active").append(
-				                                            $("<td/>").attr("colspan",2).html(restado.estado)
+				                                        $("<tr/>").addClass("bg-light").append(
+				                                            $("<th/>").attr("colspan",2).html(restado.estado)
 				                                        ).append(
-				                                            $("<td/>").addClass("text-right").html(restado.cantidad)
+				                                            $("<th/>").addClass("text-right").html(restado.cantidad)
 				                                        ).append(
-				                                            $("<td/>").addClass("text-right").html((100 * restado.cantidad / response.todo).toFixed(2) + "%")
+				                                            $("<th/>").addClass("text-right").html((100 * restado.cantidad / response.todo).toFixed(2) + "%")
 				                                        )
 				                                    );
 				                                    var motivos = restado.motivos;

@@ -112,44 +112,15 @@ class Indicadores extends Controller {
     //
 
     public function if_entrega_distrito() {
+        $user = Auth::user();
         if(Request::ajax()) {
             extract(Request::input());
-            if(isset($ccl,$grn,$str,$cno,$dst)) {
-                $distritos = DB::table("guias_ingreso as gi")
-                    ->join("datos_adicionales as da", "gi.codautogen", "=", "da.codautogen")
-                    ->join("envios_x_proceso as envxp", function($join_envxp) {
-                        $join_envxp->on("envxp.codautogen", "=", "da.Codautogen")
-                            ->on("envxp.nroproceso", "=", "da.Nroproceso")
-                            ->on("envxp.NroControl", "=", "da.NroControl");
-                    })
-                    ->join("estados_envios as esenv", "envxp.CodEstadoWeb", "=", "esenv.CodEstadoEnvio")
-                    ->join("motivos_envios as moti", "moti.CodMotivoEnvio", "=", "envxp.CodMotivoWeb")
-                    ->join("motivos_natura as mot", "envxp.CodMotivoWeb", "=", "mot.CodMotivoEnvio")
-                    ->join("motivos_justifica as justi", function($join_justi) {
-                        $join_justi->on("justi.CodJustiMotivo", "=", "envxp.CodJustiWeb")
-                            ->on("justi.CodMotivoEnvio", "=", "envxp.CodMotivoWeb");
-                    })
-                    ->join("guias_ing_procesos as gip", function($join_gip) {
-                        $join_gip->on("gip.codautogen", "=", "envxp.codautogen")
-                            ->on("gip.nroproceso", "=", "envxp.nroproceso");
-                    })
-                    ->join("vcode as vcd", "envxp.CodVcodAuto", "=", "vcd.CodVcodAuto")
-                    ->whereRaw("gi.dtmguia >= '2017-01-01'")
-                    ->where("gip.FlgIngresosReclamo", "N")
-                    ->whereIn("gi.CiCloCorteFactuCliente", $ccl)
-                    ->whereIn("da.GrupoCliente", $cno)
-                    ->whereIn("da.NroDocuCliente", $grn)
-                    ->whereIn("da.Sector", $str)
-                    ->where("vcd.CodDpto", "15")
-                    ->where("vcd.CodProv", "01")
-                    ->where(DB::raw("concat(vcd.CodDpto,vcd.CodProv,vcd.CodDist)"), $dst)
-                    ->select(
-                        "esenv.DesEstadoEnvio as estado",
-                        DB::raw("case justi.Flg_Entrega_efectiva when 'S' then 'Directo' when 'N' then 'Bajo Puerta' else upper(moti.DesMotivoEnvio) end as motivo"),
-                        DB::raw("count(*) as cant")
-                    )
-                    ->groupBy("estado", "motivo")
-                    ->get();
+            if(isset($ccl,$ofc,$prd,$loc,$nac,$int,$dst)) {
+                $ccl = implode(",", $ccl);
+                $prd = implode(",", $prd);
+                $ofc = implode(",", $ofc);
+                $doc = isset($doc) ? $doc : "Todos";
+                $distritos = DB::select("call sp_web_grafica_mapa1_det(?,?,?,?,?,?,?,?,?)", [$ccl,$prd,$ofc,$user->v_Codusuario,$loc,$nac,$int,$doc,$dst]);
                 $arr_distritos = [];
                 $arr_motivos = [];
                 $curr_estado = "x";
